@@ -16,12 +16,26 @@
 
 package tsunami.security.scanner.utilities;
 
+import java.io.File;
+
+import com.fasterxml.jackson.databind.ObjectMapper;
+import com.fasterxml.jackson.dataformat.yaml.YAMLFactory;
+
 public class App {
     public String getGreeting() {
         return "Hello world.";
     }
 
     public static void main(String[] args) {
-        System.out.println(new App().getGreeting());
+        /*System.out.println(new App().getGreeting());
+         */
+
+        /* TODO:change to system path + relative path */
+        File file = new File("/usr/local/google/home/yuxinwu/workspace/tsunami-security-scanner-utilities/application/wordpress/kustomization.yaml");
+
+        ObjectMapper mapper = new ObjectMapper(new YAMLFactory());
+        Kustomization kusto = mapper.readValue(file, Kustomization.class);
+
+        System.out.println(kusto.getName());
     }
 }
