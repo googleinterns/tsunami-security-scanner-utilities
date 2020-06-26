@@ -19,24 +19,24 @@ package tsunami.security.scanner.utilities;
 import com.beust.jcommander.Parameter;
 
 public class ApplicationArgs {
-    @Parameter(
-            names = "--app",
-            description = "Application name",
-            required = true
-    )
-    private String name;
+  @Parameter(names = "--app", description = "Application name", required = true)
+  private String name;
 
-    @Parameter(
-            names = "--version",
-            description = "Version of Application"
-    )
-    private String version;
+  @Parameter(names = "--version", description = "Version of Application")
+  private String version;
 
-    public String getName() {
-        return name;
-    }
+  @Parameter(names = "--configPath", description = "Path for config files")
+  private String configPath;
 
-    public String getVersion() {
-        return version;
-    }
+  public String getName() {
+    return name;
+  }
+
+  public String getVersion() {
+    return version;
+  }
+
+  public String getConfigPath() {
+    return configPath;
+  }
 }
