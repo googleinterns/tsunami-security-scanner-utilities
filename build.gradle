@@ -23,6 +23,8 @@ repositories {
 dependencies {
     // This dependency is used by the application.
     implementation 'com.google.guava:guava:29.0-jre'
+    compile 'io.kubernetes:client-java:8.0.2'
+    implementation 'com.beust:jcommander:1.78'
 
     // Use JUnit test framework
     testImplementation 'junit:junit:4.13'
@@ -30,5 +32,5 @@ dependencies {
 
 application {
     // Define the main class for the application.
-    mainClassName = 'tsunami.security.scanner.utilities.App'
+    mainClassName = 'demo.App'
 }

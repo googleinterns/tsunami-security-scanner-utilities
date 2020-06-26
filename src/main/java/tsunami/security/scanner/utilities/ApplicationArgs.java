@@ -1,12 +1,12 @@
 /*
  * Copyright 2020 Google LLC
- * 
+ *
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
  * You may obtain a copy of the License at
- * 
+ *
  *     https://www.apache.org/licenses/LICENSE-2.0
- * 
+ *
  * Unless required by applicable law or agreed to in writing, software
  * distributed under the License is distributed on an "AS IS" BASIS,
  * WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
@@ -16,36 +16,27 @@
 
 package tsunami.security.scanner.utilities;
 
-import org.graalvm.compiler.lir.LIR;
+import com.beust.jcommander.Parameter;
 
-import java.util.List;
+public class ApplicationArgs {
+    @Parameter(
+            names = "--app",
+            description = "Application name",
+            required = true
+    )
+    private String name;
 
-public class Kustomization {
-    private List<String> name;
-    private List<String> literals;
-    private List<String> resources;
+    @Parameter(
+            names = "--version",
+            description = "Version of Application"
+    )
+    private String version;
 
-    public List<String> getName(){
+    public String getName() {
         return name;
     }
 
-    public void setName(List<String> name){
-        this.name = name;
+    public String getVersion() {
+        return version;
     }
-
-    public List<String> getLiterals(){
-        return literals;
-    }
-
-    public void setLiterals(List<String> literals){
-        this.literals = literals;
-    }
-
-    public List<String> getResources(){
-        return resources;
-    }
-
-    public void setResources(List<String> resources){
-        this.resources = resources;
-    }
-} 
+}
