@@ -32,5 +32,5 @@ dependencies {
 
 application {
     // Define the main class for the application.
-    mainClassName = 'demo.App'
+    mainClassName = 'tsunami.security.scanner.utilities.App'
 }
