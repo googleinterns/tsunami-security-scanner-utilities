@@ -12,6 +12,8 @@ plugins {
 
     // Apply the application plugin to add support for building a CLI application.
     id 'application'
+
+    id 'com.github.sherter.google-java-format' version '0.9'
 }
 
 repositories {
@@ -23,6 +25,8 @@ repositories {
 dependencies {
     // This dependency is used by the application.
     implementation 'com.google.guava:guava:29.0-jre'
+    implementation 'io.kubernetes:client-java:8.0.2'
+    implementation 'com.beust:jcommander:1.78'
 
     // Use JUnit test framework
     testImplementation 'junit:junit:4.13'
