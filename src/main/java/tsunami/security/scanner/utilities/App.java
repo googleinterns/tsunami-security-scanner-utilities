@@ -21,7 +21,6 @@ import com.google.common.io.Files;
 import io.kubernetes.client.openapi.ApiClient;
 import io.kubernetes.client.openapi.ApiException;
 import io.kubernetes.client.openapi.Configuration;
-import io.kubernetes.client.openapi.models.*;
 import io.kubernetes.client.util.Config;
 import java.io.File;
 import java.io.IOException;
@@ -39,7 +38,8 @@ public class App {
     String appVersion = jArgs.getVersion();
     String appConfigPath = jArgs.getConfigPath();
     // Output the input app info.
-    System.out.println("App: " + appName + " Version: " + appVersion + " Config Path: " + appConfigPath);
+    System.out.println(
+        "App: " + appName + " Version: " + appVersion + " Config Path: " + appConfigPath);
 
     // Combine the file path with application name as a directory.
     String configPath = appConfigPath + "/" + appName + "/";
@@ -48,18 +48,15 @@ public class App {
     ApiClient client = Config.defaultClient();
     Configuration.setDefaultApiClient(client);
 
-    // Initialize Util tool for Java Client Api.
-    KubeJavaClientUtil kubeUtil = new KubeJavaClientUtil();
-
     // Load all application's config files, run services and deploy the app on GKE.
     try {
-      File configFile = new File(configPath);
-      for (File file : Files.fileTraverser().depthFirstPreOrder(configFile)) {
-        if (file.isFile()) {
+      File configFiles = new File(configPath);
+      for (File configFile : Files.fileTraverser().depthFirstPreOrder(configFiles)) {
+        if (configFile.isFile()) {
           // TODO: Replace passwords in configs.
           // parse all config files to Kubernetes Objects and create them.
-          System.out.println("File being loaded: " + file);
-          kubeUtil.loadAllConfigs(file);
+          System.out.println("File being loaded: " + configFile);
+          KubeJavaClientUtil.createResources(configFile);
         }
       }
     } catch (Exception e) {

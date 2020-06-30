@@ -17,6 +17,7 @@
 package tsunami.security.scanner.utilities;
 
 import com.google.common.collect.ImmutableList;
+import com.google.common.collect.ImmutableMap;
 import io.kubernetes.client.openapi.ApiException;
 import io.kubernetes.client.openapi.apis.AppsV1Api;
 import io.kubernetes.client.openapi.apis.CoreV1Api;
@@ -26,67 +27,53 @@ import io.kubernetes.client.openapi.models.V1Service;
 import io.kubernetes.client.util.Yaml;
 import java.io.File;
 import java.io.IOException;
-import java.util.HashMap;
-import java.util.List;
-import java.util.Map;
 
-public class KubeJavaClientUtil {
+public final class KubeJavaClientUtil {
+  /**
+   * This class is a wrapper for Kubernetes Java Client Api
+   * Usage: KubeJavaClientUtil.createResources(File resourceConfigFile);
+   * Purpose: Read in a Kubernetes config file for a certain application,
+   *          parse it into resources needed and create them using Java Client Api.
+   * */
+
   private static CoreV1Api coreV1Api = new CoreV1Api();
+
   private static AppsV1Api appsV1Api = new AppsV1Api();
 
-  private interface Handler {
-    void handle(Object o) throws ApiException;
+  private KubeJavaClientUtil() {}
+
+  @FunctionalInterface
+  private interface ResourceCreator {
+    void createResource(Object o) throws ApiException;
   }
 
-  /* Use the map to relate a Class object to a Handler */
-  private static final Map<Class, Handler> apiCallByClass = new HashMap<Class, Handler>();
+  // Use the map to relate a Class object to a Handler
+  private static final ImmutableMap<Class, ResourceCreator> apiCallByClass =
+      ImmutableMap.of(
+          V1Deployment.class,
+          deployment -> createDeployment((V1Deployment) deployment),
+          V1PersistentVolumeClaim.class,
+          v1PVC -> createPVC((V1PersistentVolumeClaim) v1PVC),
+          V1Service.class,
+          v1Service -> createService((V1Service) v1Service));
 
-  // public static init map
-  static {
-    apiCallByClass.put(
-        V1Deployment.class,
-        new Handler() {
-          public void handle(Object o) throws ApiException {
-            createDeployment((V1Deployment) o);
-          }
-        });
-
-    apiCallByClass.put(
-        V1PersistentVolumeClaim.class,
-        new Handler() {
-          public void handle(Object o) throws ApiException {
-            createPVC((V1PersistentVolumeClaim) o);
-          }
-        });
-
-    apiCallByClass.put(
-        V1Service.class,
-        new Handler() {
-          public void handle(Object o) throws ApiException {
-            createService((V1Service) o);
-          }
-        });
+  private static void createDeployment(V1Deployment v1Deployment) throws ApiException {
+    appsV1Api.createNamespacedDeployment("default", v1Deployment, null, null, null);
   }
 
-  private static void createDeployment(V1Deployment o) throws ApiException {
-    V1Deployment createResultDeployment =
-        appsV1Api.createNamespacedDeployment("default", o, null, null, null);
+  private static void createPVC(V1PersistentVolumeClaim v1PVC) throws ApiException {
+    coreV1Api.createNamespacedPersistentVolumeClaim("default", v1PVC, null, null, null);
   }
 
-  private static void createPVC(V1PersistentVolumeClaim o) throws ApiException {
-    V1PersistentVolumeClaim createResultPVC =
-        coreV1Api.createNamespacedPersistentVolumeClaim("default", o, null, null, null);
+  private static void createService(V1Service v1Service) throws ApiException {
+    coreV1Api.createNamespacedService("default", v1Service, null, null, null);
   }
 
-  private static void createService(V1Service o) throws ApiException {
-    V1Service createResultSvc = coreV1Api.createNamespacedService("default", o, null, null, null);
-  }
-
-  public static void loadAllConfigs(File config) throws ApiException, IOException {
-    ImmutableList<Object> objects = ImmutableList.copyOf((List<Object>) Yaml.loadAll(config));
-    for (Object obj : objects) {
-      Handler h = apiCallByClass.get(obj.getClass());
-      if (h != null) h.handle(obj);
+  public static void createResources(File resourceConfigFile) throws ApiException, IOException {
+    ImmutableList<Object> resources = ImmutableList.copyOf(Yaml.loadAll(resourceConfigFile));
+    for (Object resource : resources) {
+      ResourceCreator h = apiCallByClass.get(resource.getClass());
+      if (h != null) h.createResource(resource);
     }
   }
 }
