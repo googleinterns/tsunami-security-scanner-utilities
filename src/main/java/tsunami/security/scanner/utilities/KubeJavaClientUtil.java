@@ -28,13 +28,13 @@ import io.kubernetes.client.util.Yaml;
 import java.io.File;
 import java.io.IOException;
 
+/**
+ * This class is a wrapper for Kubernetes Java Client Api
+ * Usage: KubeJavaClientUtil.createResources(File resourceConfigFile);
+ * Purpose: Read in a Kubernetes config file for a certain application,
+ *          parse it into resources needed and create them using Java Client Api.
+ * */
 public final class KubeJavaClientUtil {
-  /**
-   * This class is a wrapper for Kubernetes Java Client Api
-   * Usage: KubeJavaClientUtil.createResources(File resourceConfigFile);
-   * Purpose: Read in a Kubernetes config file for a certain application,
-   *          parse it into resources needed and create them using Java Client Api.
-   * */
 
   private static CoreV1Api coreV1Api = new CoreV1Api();
 
@@ -53,7 +53,7 @@ public final class KubeJavaClientUtil {
           V1Deployment.class,
           deployment -> createDeployment((V1Deployment) deployment),
           V1PersistentVolumeClaim.class,
-          v1PVC -> createPVC((V1PersistentVolumeClaim) v1PVC),
+          v1Pvc -> createPvc((V1PersistentVolumeClaim) v1Pvc),
           V1Service.class,
           v1Service -> createService((V1Service) v1Service));
 
@@ -61,8 +61,8 @@ public final class KubeJavaClientUtil {
     appsV1Api.createNamespacedDeployment("default", v1Deployment, null, null, null);
   }
 
-  private static void createPVC(V1PersistentVolumeClaim v1PVC) throws ApiException {
-    coreV1Api.createNamespacedPersistentVolumeClaim("default", v1PVC, null, null, null);
+  private static void createPvc(V1PersistentVolumeClaim v1Pvc) throws ApiException {
+    coreV1Api.createNamespacedPersistentVolumeClaim("default", v1Pvc, null, null, null);
   }
 
   private static void createService(V1Service v1Service) throws ApiException {
