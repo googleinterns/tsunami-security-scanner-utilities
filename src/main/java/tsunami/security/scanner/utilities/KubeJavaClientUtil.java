@@ -72,8 +72,8 @@ public final class KubeJavaClientUtil {
   public static void createResources(File resourceConfigFile) throws ApiException, IOException {
     ImmutableList<Object> resources = ImmutableList.copyOf(Yaml.loadAll(resourceConfigFile));
     for (Object resource : resources) {
-      ResourceCreator h = apiCallByClass.get(resource.getClass());
-      if (h != null) h.createResource(resource);
+      ResourceCreator creator = apiCallByClass.get(resource.getClass());
+      if (creator != null) creator.createResource(resource);
     }
   }
 }
