@@ -22,9 +22,11 @@ import java.util.*;
 
 /**
  * This class is used for replace ${version} and ${password} parameters in template config files.
- * Usage: FreeMarkerUtil.replaceTemplates(String version, String password, File configFile); Input:
- * version: version of certain application password: password used in application's deployment
- * configFile: original config file template Output: A new config file after replacement.
+ * Usage: FreeMarkerUtil.replaceTemplates(String version, String password, File configFile);
+ * Input:
+ *      version: version of certain application
+ *      password: password used in application's deployment
+ *      configFile: original config file template Output: A new config file after replacement.
  */
 public final class FreeMarkerUtil {
 
