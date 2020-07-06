@@ -44,7 +44,7 @@ public final class FreeMarkerUtil {
       throws IOException, TemplateException {
 
     // Create a data-model.
-    Map<String, String> root = new HashMap();
+    Map<String, String> root = new HashMap<>();
     root.put("password", password);
     root.put("version", version);
 
@@ -64,9 +64,7 @@ public final class FreeMarkerUtil {
     StringWriter stringWriter = new StringWriter();
     temp.process(root, stringWriter);
 
-    // get the config in String format from the StringWriter
-    String config = stringWriter.toString();
-
-    return config;
+    // Return the config in String format.
+    return stringWriter.toString();
   }
 }
