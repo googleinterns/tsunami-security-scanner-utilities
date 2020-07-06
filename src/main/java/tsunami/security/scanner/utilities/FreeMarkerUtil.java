@@ -16,7 +16,6 @@
 
 package tsunami.security.scanner.utilities;
 
-
 import freemarker.template.*;
 import java.io.*;
 import java.util.*;
@@ -27,7 +26,7 @@ import java.util.*;
  * version: version of certain application password: password used in application's deployment
  * configFile: original config file template Output: A new config file after replacement.
  */
-public class FreeMarkerUtil {
+public final class FreeMarkerUtil {
 
   static Configuration cfg = new Configuration(Configuration.VERSION_2_3_29);
 
@@ -39,11 +38,11 @@ public class FreeMarkerUtil {
     cfg.setFallbackOnNullLoopVariable(false);
   }
 
-  public static File replaceTemplates(String version, String password, File configFile)
+  public static String replaceTemplates(String version, String password, File configFile)
       throws IOException, TemplateException {
 
     // Create a data-model.
-    Map root = new HashMap();
+    Map<String, String> root = new HashMap();
     root.put("password", password);
     root.put("version", version);
 
@@ -51,6 +50,8 @@ public class FreeMarkerUtil {
     String file = configFile.getName();
     String filePath = configFile.getPath();
     String path = filePath.substring(0, filePath.lastIndexOf("/"));
+    System.out.println("file: " + file);
+    System.out.println("path: " + path);
 
     // Set path for config templates
     cfg.setDirectoryForTemplateLoading(new File(path));
@@ -58,11 +59,12 @@ public class FreeMarkerUtil {
     // Get the template file.
     Template temp = cfg.getTemplate(file);
 
-    // Merge data-model with template. Generate a new config file.
-    File outFile = new File(file.substring(0, file.lastIndexOf(".")) + "-out.yaml");
-    Writer out = new OutputStreamWriter(new FileOutputStream(outFile));
-    temp.process(root, out);
-    out.close();
-    return outFile;
+    StringWriter stringWriter = new StringWriter();
+    temp.process(root, stringWriter);
+
+    // get the config in String format from the StringWriter
+    String config = stringWriter.toString();
+
+    return config;
   }
 }

@@ -80,14 +80,13 @@ public class App {
 
           if (appVersionMap.containsKey(curFileName)) {
             // Replace ${version} in the config file template with input version
-            String version = (String) appVersionMap.get(curFileName);
-            // System.out.println(version);
-            File newConfigFile = FreeMarkerUtil.replaceTemplates(version, appPassword, configFile);
+            String version = appVersionMap.get(curFileName);
+            String resourceConfig =
+                FreeMarkerUtil.replaceTemplates(version, appPassword, configFile);
 
-            // Parse all config files to Kubernetes Objects and create them.
-            System.out.println("File being loaded: " + newConfigFile);
-            KubeJavaClientUtil.createResources(newConfigFile);
-          } else continue;
+            // Parse all config to Kubernetes Objects and create them.
+            KubeJavaClientUtil.createResources(resourceConfig);
+          }
         }
       }
     } catch (Exception e) {
