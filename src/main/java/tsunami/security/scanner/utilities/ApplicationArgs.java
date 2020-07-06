@@ -22,21 +22,31 @@ public class ApplicationArgs {
   @Parameter(names = "--app", description = "Application name", required = true)
   private String name;
 
-  @Parameter(names = "--version", description = "Version of Application")
-  private String version;
+  @Parameter(
+      names = "--versionList",
+      description =
+          "Version of each sub applications, format: --versionList app1::version1,app2::version2")
+  private List<String> versionList;
 
   @Parameter(names = "--configPath", description = "Path for config files")
   private String configPath;
+
+  @Parameter(names = "--password", description = "Resources' password")
+  private String password;
 
   public String getName() {
     return name;
   }
 
-  public String getVersion() {
-    return version;
+  public List<String> getVersionList() {
+    return versionList;
   }
 
   public String getConfigPath() {
     return configPath;
+  }
+
+  public String getPassword() {
+    return password;
   }
 }

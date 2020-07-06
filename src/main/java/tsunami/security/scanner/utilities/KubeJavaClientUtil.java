@@ -25,14 +25,13 @@ import io.kubernetes.client.openapi.models.V1Deployment;
 import io.kubernetes.client.openapi.models.V1PersistentVolumeClaim;
 import io.kubernetes.client.openapi.models.V1Service;
 import io.kubernetes.client.util.Yaml;
-import java.io.File;
 import java.io.IOException;
 
 /**
  * This class is a wrapper for Kubernetes Java Client Api
  * Usage: KubeJavaClientUtil.createResources(File resourceConfigFile);
  * Purpose: Read in a Kubernetes config file for a certain application,
- *          parse it into resources needed and create them using Java Client Api.
+ *           parse it into resources needed and create them using Java Client Api.
  */
 public final class KubeJavaClientUtil {
 
@@ -69,11 +68,11 @@ public final class KubeJavaClientUtil {
     coreV1Api.createNamespacedService("default", v1Service, null, null, null);
   }
 
-  public static void createResources(File resourceConfigFile) throws ApiException, IOException {
-    ImmutableList<Object> resources = ImmutableList.copyOf(Yaml.loadAll(resourceConfigFile));
+  public static void createResources(String resourceConfig) throws ApiException, IOException {
+    ImmutableList<Object> resources = ImmutableList.copyOf(Yaml.loadAll(resourceConfig));
     for (Object resource : resources) {
-      ResourceCreator h = apiCallByClass.get(resource.getClass());
-      if (h != null) h.createResource(resource);
+      ResourceCreator creator = apiCallByClass.get(resource.getClass());
+      if (creator != null) creator.createResource(resource);
     }
   }
 }

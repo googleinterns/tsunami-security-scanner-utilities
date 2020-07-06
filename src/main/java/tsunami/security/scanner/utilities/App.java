@@ -24,6 +24,9 @@ import io.kubernetes.client.openapi.Configuration;
 import io.kubernetes.client.util.Config;
 import java.io.File;
 import java.io.IOException;
+import java.util.HashMap;
+import java.util.List;
+import java.util.Map;
 
 public class App {
 
@@ -35,11 +38,19 @@ public class App {
     helloCmd.parse(args);
 
     String appName = jArgs.getName();
-    String appVersion = jArgs.getVersion();
+    List<String> appVersionList = jArgs.getVersionList();
     String appConfigPath = jArgs.getConfigPath();
+    String appPassword = jArgs.getPassword();
     // Output the input app info.
     System.out.println(
-        "App: " + appName + " Version: " + appVersion + " Config Path: " + appConfigPath);
+        "App: "
+            + appName
+            + " VersionList: "
+            + appVersionList
+            + " Config Path: "
+            + appConfigPath
+            + " Password: "
+            + appPassword);
 
     // Combine the file path with application name as a directory.
     String configPath = appConfigPath + "/" + appName + "/";
@@ -48,15 +59,34 @@ public class App {
     ApiClient client = Config.defaultClient();
     Configuration.setDefaultApiClient(client);
 
+    // Translate input versionList to a map of <sub application name, version>
+    Map<String, String> appVersionMap = new HashMap<>();
+    for (String version : appVersionList) {
+      appVersionMap.put(
+          version.substring(0, version.indexOf("::")),
+          version.substring(version.indexOf("::") + 2));
+    }
+
     // Load all application's config files, run services and deploy the app on GKE.
     try {
       File configFiles = new File(configPath);
+
+      // Traverse all files under certain application's config path
       for (File configFile : Files.fileTraverser().depthFirstPreOrder(configFiles)) {
+
         if (configFile.isFile()) {
-          // TODO: Replace passwords in configs.
-          // parse all config files to Kubernetes Objects and create them.
-          System.out.println("File being loaded: " + configFile);
-          KubeJavaClientUtil.createResources(configFile);
+          String curFile = configFile.getName();
+          String curFileName = curFile.substring(0, curFile.lastIndexOf("."));
+
+          if (appVersionMap.containsKey(curFileName)) {
+            // Replace ${version} in the config file template with input version
+            String version = appVersionMap.get(curFileName);
+            String resourceConfig =
+                FreeMarkerUtil.replaceTemplates(version, appPassword, configFile);
+
+            // Parse all config to Kubernetes Objects and create them.
+            KubeJavaClientUtil.createResources(resourceConfig);
+          }
         }
       }
     } catch (Exception e) {
