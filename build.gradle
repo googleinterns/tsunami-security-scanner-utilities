@@ -28,6 +28,7 @@ dependencies {
     implementation 'io.kubernetes:client-java:8.0.2'
     implementation 'com.beust:jcommander:1.78'
     implementation 'org.freemarker:freemarker:2.3.30'
+    implementation 'com.google.code.gson:gson:2.8.6'
 
     // Use JUnit test framework
     testImplementation 'junit:junit:4.13'

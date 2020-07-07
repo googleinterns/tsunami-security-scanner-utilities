@@ -31,7 +31,7 @@ import java.io.IOException;
  * This class is a wrapper for Kubernetes Java Client Api
  * Usage: KubeJavaClientUtil.createResources(File resourceConfigFile);
  * Purpose: Read in a Kubernetes config file for a certain application,
- *           parse it into resources needed and create them using Java Client Api.
+ *          parse it into resources needed and create them using Java Client Api.
  */
 public final class KubeJavaClientUtil {
 
