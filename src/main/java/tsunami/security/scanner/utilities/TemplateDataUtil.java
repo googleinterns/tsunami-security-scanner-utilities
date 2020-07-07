@@ -29,7 +29,6 @@ import java.util.Map;
  *      A map which reflects a correspondence of input json keys and values.
  * Deprecated usage: FreeMarkerUtil.replaceTemplates(String version, String password, File configFile);
  */
-
 public final class TemplateDataUtil {
 
   private TemplateDataUtil() {}

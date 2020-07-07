@@ -89,9 +89,7 @@ public final class FreeMarkerUtil {
     StringWriter stringWriter = new StringWriter();
     temp.process(templateDataMap, stringWriter);
 
-    // get the config in String format from the StringWriter
-    String config = stringWriter.toString();
-
-    return config;
+    // Return the config in String format.
+    return stringWriter.toString();
   }
 }
