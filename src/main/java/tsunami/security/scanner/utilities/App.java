@@ -47,8 +47,7 @@ public class App {
     String configPath = appConfigPath + "/" + appName + "/";
 
     // Transform input template data Json String to Map.
-    Map<String, String> templateDataMap = new HashMap<>();
-    templateDataMap = TemplateDataUtil.parseTemplateDataJson(templateData);
+    Map<String, String> templateDataMap = TemplateDataUtil.parseTemplateDataJson(templateData);
 
     // Initialize Kubernetes Java Client Api.
     ApiClient client = Config.defaultClient();

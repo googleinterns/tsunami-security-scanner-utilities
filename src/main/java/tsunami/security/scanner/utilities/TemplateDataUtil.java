@@ -18,6 +18,8 @@ package tsunami.security.scanner.utilities;
 
 import com.google.gson.Gson;
 import com.google.gson.GsonBuilder;
+
+import java.lang.reflect.Type;
 import java.util.Map;
 
 /**
@@ -39,7 +41,8 @@ public final class TemplateDataUtil {
     builder.setPrettyPrinting();
 
     Gson gson = builder.create();
-    Map<String, String> templateDataMap = gson.fromJson(templateDataJson, Map.class);
+    Type type = new TypeToken<Map<String, String>>(){}.getType();
+    Map<String, String> templateDataMap = gson.fromJson(templateDataJson, type);
 
     return templateDataMap;
   }

@@ -65,31 +65,4 @@ public final class FreeMarkerUtil {
 
     return config;
   }
-
-  // Deprecated
-  public static String replaceTemplates(String version, String password, File configFile)
-      throws IOException, TemplateException {
-
-    // Create a data-model.
-    Map<String, String> templateDataMap = new HashMap();
-    templateDataMap.put("password", password);
-    templateDataMap.put("mysql_version", version);
-
-    // Split input configFile into path and file name.
-    String file = configFile.getName();
-    String filePath = configFile.getPath();
-    String path = filePath.substring(0, filePath.lastIndexOf("/"));
-
-    // Set path for config templates
-    cfg.setDirectoryForTemplateLoading(new File(path));
-
-    // Get the template file.
-    Template temp = cfg.getTemplate(file);
-
-    StringWriter stringWriter = new StringWriter();
-    temp.process(templateDataMap, stringWriter);
-
-    // Return the config in String format.
-    return stringWriter.toString();
-  }
 }
