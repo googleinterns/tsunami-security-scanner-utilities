@@ -22,31 +22,23 @@ public class ApplicationArgs {
   @Parameter(names = "--app", description = "Application name", required = true)
   private String name;
 
-  @Parameter(
-      names = "--versionList",
-      description =
-          "Version of each sub applications, format: --versionList app1::version1,app2::version2")
-  private List<String> versionList;
-
   @Parameter(names = "--configPath", description = "Path for config files")
   private String configPath;
 
-  @Parameter(names = "--password", description = "Resources' password")
-  private String password;
+  @Parameter(
+      names = "--templateData",
+      description = "Template Data needs to be substituted in Json String type.")
+  private String templateData;
 
   public String getName() {
     return name;
-  }
-
-  public List<String> getVersionList() {
-    return versionList;
   }
 
   public String getConfigPath() {
     return configPath;
   }
 
-  public String getPassword() {
-    return password;
+  public String getTemplateData() {
+    return templateData;
   }
 }

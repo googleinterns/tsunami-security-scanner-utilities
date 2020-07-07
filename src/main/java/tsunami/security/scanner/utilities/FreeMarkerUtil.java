@@ -21,12 +21,12 @@ import java.io.*;
 import java.util.*;
 
 /**
- * This class is used for replace ${version} and ${password} parameters in template config files.
- * Usage: FreeMarkerUtil.replaceTemplates(String version, String password, File configFile);
+ * This class is used for replace ${app_version} and ${password} parameters in template config files.
+ * Usage: FreeMarkerUtil.replaceTemplates(Map<String, String> templateDataMap, File configFile);
  * Input:
- *      version: version of certain application
- *      password: password used in application's deployment
+ *      templateDataMap: Map of template data needs to be substituted, such as {mysql_version=5.6, password=dkkeoij}
  *      configFile: original config file template Output: A new config file after replacement.
+ * Deprecated usage: FreeMarkerUtil.replaceTemplates(String version, String password, File configFile);
  */
 public final class FreeMarkerUtil {
 
@@ -40,13 +40,8 @@ public final class FreeMarkerUtil {
     cfg.setFallbackOnNullLoopVariable(false);
   }
 
-  public static String replaceTemplates(String version, String password, File configFile)
+  public static String replaceTemplates(Map<String, String> templateDataMap, File configFile)
       throws IOException, TemplateException {
-
-    // Create a data-model.
-    Map<String, String> root = new HashMap<>();
-    root.put("password", password);
-    root.put("version", version);
 
     // Split input configFile into path and file name.
     String file = configFile.getName();
@@ -62,9 +57,12 @@ public final class FreeMarkerUtil {
     Template temp = cfg.getTemplate(file);
 
     StringWriter stringWriter = new StringWriter();
-    temp.process(root, stringWriter);
+    temp.process(templateDataMap, stringWriter);
 
-    // Return the config in String format.
-    return stringWriter.toString();
+    // get the config in String format from the StringWriter
+    String config = stringWriter.toString();
+    System.out.println(config);
+
+    return config;
   }
 }

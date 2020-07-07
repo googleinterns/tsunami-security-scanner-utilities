@@ -25,7 +25,6 @@ import io.kubernetes.client.util.Config;
 import java.io.File;
 import java.io.IOException;
 import java.util.HashMap;
-import java.util.List;
 import java.util.Map;
 
 public class App {
@@ -38,34 +37,21 @@ public class App {
     helloCmd.parse(args);
 
     String appName = jArgs.getName();
-    List<String> appVersionList = jArgs.getVersionList();
     String appConfigPath = jArgs.getConfigPath();
-    String appPassword = jArgs.getPassword();
+    String templateData = jArgs.getTemplateData();
     // Output the input app info.
     System.out.println(
-        "App: "
-            + appName
-            + " VersionList: "
-            + appVersionList
-            + " Config Path: "
-            + appConfigPath
-            + " Password: "
-            + appPassword);
+        "App: " + appName + " Config Path: " + appConfigPath + " templateData: " + templateData);
 
     // Combine the file path with application name as a directory.
     String configPath = appConfigPath + "/" + appName + "/";
 
+    // Transform input template data Json String to Map.
+    Map<String, String> templateDataMap = TemplateDataUtil.parseTemplateDataJson(templateData);
+
     // Initialize Kubernetes Java Client Api.
     ApiClient client = Config.defaultClient();
     Configuration.setDefaultApiClient(client);
-
-    // Translate input versionList to a map of <sub application name, version>
-    Map<String, String> appVersionMap = new HashMap<>();
-    for (String version : appVersionList) {
-      appVersionMap.put(
-          version.substring(0, version.indexOf("::")),
-          version.substring(version.indexOf("::") + 2));
-    }
 
     // Load all application's config files, run services and deploy the app on GKE.
     try {
@@ -75,18 +61,10 @@ public class App {
       for (File configFile : Files.fileTraverser().depthFirstPreOrder(configFiles)) {
 
         if (configFile.isFile()) {
-          String curFile = configFile.getName();
-          String curFileName = curFile.substring(0, curFile.lastIndexOf("."));
+          String resourceConfig = FreeMarkerUtil.replaceTemplates(templateDataMap, configFile);
 
-          if (appVersionMap.containsKey(curFileName)) {
-            // Replace ${version} in the config file template with input version
-            String version = appVersionMap.get(curFileName);
-            String resourceConfig =
-                FreeMarkerUtil.replaceTemplates(version, appPassword, configFile);
-
-            // Parse all config to Kubernetes Objects and create them.
-            KubeJavaClientUtil.createResources(resourceConfig);
-          }
+          // Parse all config to Kubernetes Objects and create them.
+          KubeJavaClientUtil.createResources(resourceConfig);
         }
       }
     } catch (Exception e) {
