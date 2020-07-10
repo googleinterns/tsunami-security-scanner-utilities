@@ -1,12 +1,12 @@
 /*
  * Copyright 2020 Google LLC
- * 
+ *
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
  * You may obtain a copy of the License at
- * 
+ *
  *     https://www.apache.org/licenses/LICENSE-2.0
- * 
+ *
  * Unless required by applicable law or agreed to in writing, software
  * distributed under the License is distributed on an "AS IS" BASIS,
  * WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
@@ -18,17 +18,14 @@ package tsunami.security.scanner.utilities;
 
 import static com.google.common.truth.Truth.assertThat;
 import static com.google.common.truth.Truth8.assertThat;
-import static org.junit.Assert.assertThrows;
 
 import com.google.gson.JsonSyntaxException;
-import freemarker.template.TemplateException;
 import io.kubernetes.client.openapi.ApiClient;
 import io.kubernetes.client.openapi.ApiException;
 import io.kubernetes.client.openapi.Configuration;
 import io.kubernetes.client.openapi.apis.CoreV1Api;
 import io.kubernetes.client.openapi.models.V1DeleteOptions;
 import io.kubernetes.client.util.Config;
-import java.io.FileNotFoundException;
 import java.io.IOException;
 import java.util.List;
 import org.junit.Test;
@@ -36,19 +33,54 @@ import org.junit.runner.RunWith;
 import org.junit.runners.JUnit4;
 
 @RunWith(JUnit4.class)
-public class AppTest {
+public class KubeJavaClientUtilTest {
 
   @Test
-  public void testMain()
-      throws ApiException, IOException, ClassNotFoundException, TemplateException,
-          InterruptedException {
-    String[] args = setArgs();
-
-    App classUnderTest = new App();
-    classUnderTest.main(args);
+  public void testKubeJavaClientUtil() throws IOException, ApiException, InterruptedException {
+    String resourceConfig =
+        "apiVersion: v1\n"
+            + "kind: Service\n"
+            + "metadata:\n"
+            + "  name: jupyter\n"
+            + "  labels:\n"
+            + "    app: jupyter\n"
+            + "spec:\n"
+            + "  ports:\n"
+            + "  - port: 80\n"
+            + "    name: http\n"
+            + "    targetPort: 8888\n"
+            + "  selector:\n"
+            + "    app: jupyter\n"
+            + "  type: LoadBalancer\n"
+            + "---\n"
+            + "apiVersion: v1\n"
+            + "kind: Pod\n"
+            + "metadata:\n"
+            + "  name: jupyter\n"
+            + "  labels:\n"
+            + "    app: jupyter\n"
+            + "spec:\n"
+            + "  containers:\n"
+            + "    - name: jupyter\n"
+            + "      image: skippbox/jupyter:0.0.3\n"
+            + "      ports:\n"
+            + "      - containerPort: 8888\n"
+            + "        protocol: TCP\n"
+            + "        name: http\n"
+            + "      volumeMounts:\n"
+            + "        - mountPath: /root\n"
+            + "          name: notebook-volume\n"
+            + "  volumes:\n"
+            + "  - name: notebook-volume\n"
+            + "    gitRepo:\n"
+            + "      repository: \"https://github.com/kubernetes-client/python.git\"\n";
 
     ApiClient client = Config.defaultClient();
     Configuration.setDefaultApiClient(client);
+
+    KubeJavaClientUtil.createResources(resourceConfig);
+
+    Thread.sleep(1000);
 
     List<String> podList = KubeJavaClientUtil.getPods();
     List<String> serviceList = KubeJavaClientUtil.getServices();
@@ -57,9 +89,7 @@ public class AppTest {
     assertThat(serviceList).contains("jupyter");
     assertThat(podList).contains("jupyter");
 
-    Thread.sleep(1000);
-
-    // Delete all created resources
+    // Delete all created resources.
     CoreV1Api coreV1Api = new CoreV1Api();
 
     coreV1Api.deleteNamespacedService(
@@ -68,50 +98,14 @@ public class AppTest {
     try {
       coreV1Api.deleteNamespacedPod(
           "jupyter", "default", null, null, null, null, null, new V1DeleteOptions());
-    } catch (JsonSyntaxException exception) {
-      if (exception.getCause() instanceof IllegalStateException) {
-        IllegalStateException ise = (IllegalStateException) exception.getCause();
+    } catch (JsonSyntaxException e) {
+      if (e.getCause() instanceof IllegalStateException) {
+        IllegalStateException ise = (IllegalStateException) e.getCause();
         if (ise.getMessage() == null
-            || !ise.getMessage().contains("Expected a string but was BEGIN_OBJECT"))
-          throw exception;
-      } else throw exception;
+            || !ise.getMessage().contains("Expected a string but was BEGIN_OBJECT")) throw e;
+      } else throw e;
     }
 
     Thread.sleep(10000);
-  }
-
-  @Test
-  public void testMain_whenInputArgsIsIllegal() {
-    String[] args = new String[2];
-    args[0] = "--app";
-    args[1] = "jupyter";
-
-    App classUnderTest = new App();
-    assertThrows(TemplateException.class, () -> classUnderTest.main(args));
-  }
-
-  @Test
-  public void testMain_whenConfigPathDoesNotExist() {
-    String[] args = setArgs();
-    args[3] = System.getProperty("user.dir");
-
-    App classUnderTest = new App();
-    assertThrows(FileNotFoundException.class, () -> classUnderTest.main(args));
-
-    args[1] = "jupytr";
-    args[3] = System.getProperty("user.dir") + "/application";
-
-    assertThrows(FileNotFoundException.class, () -> classUnderTest.main(args));
-  }
-
-  private String[] setArgs() {
-    String[] args = new String[6];
-    args[0] = "--app";
-    args[1] = "jupyter";
-    args[2] = "--configPath";
-    args[3] = System.getProperty("user.dir") + "/application";
-    args[4] = "--templateData";
-    args[5] = "{'jupyter_version':'0.0.3'}";
-    return args;
   }
 }
