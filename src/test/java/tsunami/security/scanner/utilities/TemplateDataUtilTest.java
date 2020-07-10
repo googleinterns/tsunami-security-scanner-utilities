@@ -17,8 +17,9 @@
 package tsunami.security.scanner.utilities;
 
 import static com.google.common.truth.Truth.assertThat;
-import static com.google.common.truth.Truth8.assertThat;
+import static org.junit.Assert.assertThrows;
 
+import com.google.gson.JsonSyntaxException;
 import java.util.HashMap;
 import java.util.Map;
 import org.junit.Test;
@@ -26,10 +27,10 @@ import org.junit.runner.RunWith;
 import org.junit.runners.JUnit4;
 
 @RunWith(JUnit4.class)
-public class TemplateDataUtilTest {
+public final class TemplateDataUtilTest {
 
   @Test
-  public void testTemplateDataUtil() {
+  public void parseTemplateData_whenInputValid_success() {
     String templateDataJson =
         "{'mysql_version':'5.6','password':'dfhieuwhfhdsfj','wordpress_version':'4.8-apache'}";
 
@@ -40,6 +41,37 @@ public class TemplateDataUtilTest {
     expectedMap.put("password", "dfhieuwhfhdsfj");
     expectedMap.put("wordpress_version", "4.8-apache");
 
-    assertThat(resultMap).isEqualTo(expectedMap);
+    assertThat(resultMap).containsExactlyEntriesIn(expectedMap);
+  }
+
+  @Test
+  public void parseTemplateData_whenMapDataEmpty_success() {
+    String templateDataJson = "{}";
+
+    Map<String, String> resultMap = TemplateDataUtil.parseTemplateDataJson(templateDataJson);
+
+    Map<String, String> expectedMap = new HashMap<>();
+
+    assertThat(resultMap).containsExactlyEntriesIn(expectedMap);
+  }
+
+  @Test
+  public void parseTemplateData_whenStringEmpty_failed() {
+    String templateDataJson = "{'mysql_version':''}";
+
+    Map<String, String> resultMap = TemplateDataUtil.parseTemplateDataJson(templateDataJson);
+
+    Map<String, String> expectedMap = new HashMap<>();
+    expectedMap.put("mysql_version", "");
+
+    assertThat(resultMap).containsExactlyEntriesIn(expectedMap);
+  }
+
+  @Test
+  public void parseTemplateData_whenJsonNotMap_failed() {
+    String templateDataJson = "{'mysql_version':['5.6','1.8']}";
+
+    assertThrows(
+        JsonSyntaxException.class, () -> TemplateDataUtil.parseTemplateDataJson(templateDataJson));
   }
 }
