@@ -22,7 +22,7 @@ metadata:
 spec:
   containers:
     - name: jupyter
-      image: skippbox/jupyter:${jupyter_version}
+      image: jupyter/base-notebook:${jupyter_version}
       ports:
       - containerPort: 8888
         protocol: TCP
