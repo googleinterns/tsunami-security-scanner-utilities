@@ -36,12 +36,14 @@ public final class TemplateDataUtilTest {
 
     Map<String, String> resultMap = TemplateDataUtil.parseTemplateDataJson(templateDataJson);
 
-    Map<String, String> expectedMap = new HashMap<>();
-    expectedMap.put("mysql_version", "5.6");
-    expectedMap.put("password", "dfhieuwhfhdsfj");
-    expectedMap.put("wordpress_version", "4.8-apache");
-
-    assertThat(resultMap).containsExactlyEntriesIn(expectedMap);
+    assertThat(resultMap)
+        .containsExactly(
+            "mysql_version",
+            "5.6",
+            "password",
+            "dfhieuwhfhdsfj",
+            "wordpress_version",
+            "4.8-apache");
   }
 
   @Test
@@ -50,9 +52,7 @@ public final class TemplateDataUtilTest {
 
     Map<String, String> resultMap = TemplateDataUtil.parseTemplateDataJson(templateDataJson);
 
-    Map<String, String> expectedMap = new HashMap<>();
-
-    assertThat(resultMap).containsExactlyEntriesIn(expectedMap);
+    assertThat(resultMap).isEmpty();
   }
 
   @Test
@@ -61,10 +61,7 @@ public final class TemplateDataUtilTest {
 
     Map<String, String> resultMap = TemplateDataUtil.parseTemplateDataJson(templateDataJson);
 
-    Map<String, String> expectedMap = new HashMap<>();
-    expectedMap.put("mysql_version", "");
-
-    assertThat(resultMap).containsExactlyEntriesIn(expectedMap);
+    assertThat(resultMap).containsExactly("mysql_version", "");
   }
 
   @Test
