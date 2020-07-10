@@ -20,10 +20,11 @@ import static com.google.common.truth.Truth.assertThat;
 import static org.junit.Assert.assertThrows;
 
 import com.google.common.collect.ImmutableMap;
+import com.google.common.io.Files;
 import freemarker.template.TemplateException;
 import java.io.File;
-import java.io.FileWriter;
 import java.io.IOException;
+import java.nio.charset.Charset;
 import org.junit.Rule;
 import org.junit.Test;
 import org.junit.rules.TemporaryFolder;
@@ -43,9 +44,8 @@ public final class FreeMarkerUtilTest {
         ImmutableMap.of("jupyter_version", "notebook-6.0.3");
 
     File configFile = folder.newFile("test.yaml");
-    FileWriter writer = new FileWriter(configFile);
-    writer.write("jupyter_version:${jupyter_version}\n");
-    writer.close();
+    Files.asCharSink(configFile, Charset.forName("UTF-8"))
+        .write("jupyter_version:${jupyter_version}\n");
 
     String res = FreeMarkerUtil.replaceTemplates(templateDataMap, configFile);
 
@@ -58,9 +58,8 @@ public final class FreeMarkerUtilTest {
     ImmutableMap<String, String> templateDataMap = ImmutableMap.of("mysql_version", "5.6");
 
     File configFile = folder.newFile("test.yaml");
-    FileWriter writer = new FileWriter(configFile);
-    writer.write("jupyter_version:${jupyter_version}\n");
-    writer.close();
+    Files.asCharSink(configFile, Charset.forName("UTF-8"))
+        .write("jupyter_version:${jupyter_version}\n");
 
     assertThrows(
         TemplateException.class,
