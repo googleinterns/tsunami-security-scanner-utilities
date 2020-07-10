@@ -16,20 +16,23 @@
 
 package tsunami.security.scanner.utilities;
 
+import static com.google.common.base.Strings.isNullOrEmpty;
 import com.beust.jcommander.JCommander;
 import com.google.common.io.Files;
+import freemarker.template.TemplateException;
 import io.kubernetes.client.openapi.ApiClient;
 import io.kubernetes.client.openapi.ApiException;
 import io.kubernetes.client.openapi.Configuration;
 import io.kubernetes.client.util.Config;
 import java.io.File;
+import java.io.FileNotFoundException;
 import java.io.IOException;
-import java.util.HashMap;
 import java.util.Map;
 
 public class App {
 
-  public static void main(String[] args) throws IOException, ApiException, ClassNotFoundException {
+  public static void main(String[] args)
+      throws IOException, ApiException, ClassNotFoundException, TemplateException {
 
     // Parse args read from command line
     ApplicationArgs jArgs = new ApplicationArgs();
@@ -42,6 +45,11 @@ public class App {
     // Output the input app info.
     System.out.println(
         "App: " + appName + " Config Path: " + appConfigPath + " templateData: " + templateData);
+
+    // Set a default directory for configs if no config path is passed in.
+    if (isNullOrEmpty(appConfigPath)) {
+      appConfigPath = System.getProperty("user.dir") + "/application";
+    }
 
     // Combine the file path with application name as a directory.
     String configPath = appConfigPath + "/" + appName + "/";
@@ -57,6 +65,9 @@ public class App {
     try {
       File configFiles = new File(configPath);
 
+      // Check if configFiles is an existed directory
+      if (!configFiles.isDirectory()) throw new FileNotFoundException("Wrong directory.");
+
       // Traverse all files under certain application's config path
       for (File configFile : Files.fileTraverser().depthFirstPreOrder(configFiles)) {
 
@@ -69,6 +80,7 @@ public class App {
       }
     } catch (Exception e) {
       e.printStackTrace();
+      throw e;
     }
 
     /* Example for creation of objects and deletion:
