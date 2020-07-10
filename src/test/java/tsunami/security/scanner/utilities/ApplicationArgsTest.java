@@ -17,7 +17,6 @@
 package tsunami.security.scanner.utilities;
 
 import static com.google.common.truth.Truth.assertThat;
-import static com.google.common.truth.Truth8.assertThat;
 import static org.junit.Assert.assertThrows;
 
 import com.beust.jcommander.JCommander;
@@ -27,29 +26,40 @@ import org.junit.runner.RunWith;
 import org.junit.runners.JUnit4;
 
 @RunWith(JUnit4.class)
-public class ApplicationArgsTest {
+public final class ApplicationArgsTest {
 
   @Test
-  public void testApplicationArgs() {
-    String[] args = setArgs();
+  public void parse_whenValidArgs_parsesSuccessfully() {
+    String[] args =
+        new String[] {
+          "--app",
+          "jupyter",
+          "--configPath",
+          "application",
+          "--templateData",
+          "{'jupyter_version':'notebook-6.0.3'}"
+        };
 
     ApplicationArgs jArgs = new ApplicationArgs();
     JCommander cmd = JCommander.newBuilder().addObject(jArgs).build();
     cmd.parse(args);
 
-    String appName = jArgs.getName();
-    String appConfigPath = jArgs.getConfigPath();
-    String templateData = jArgs.getTemplateData();
-
-    assertThat(appName).isEqualTo(args[1]);
-    assertThat(appConfigPath).isEqualTo(args[3]);
-    assertThat(templateData).isEqualTo(args[5]);
+    assertThat(jArgs.getName()).isEqualTo("jupyter");
+    assertThat(jArgs.getConfigPath()).isEqualTo("application");
+    assertThat(jArgs.getTemplateData()).isEqualTo("{'jupyter_version':'notebook-6.0.3'}");
   }
 
   @Test
-  public void testApplicationArgs_whenInputFlagIsInvalid() {
-    String[] args = setArgs();
-    args[2] = "--config";
+  public void parse_whenInvalidFlags_parseFailed() {
+    String[] args =
+        new String[] {
+          "--app",
+          "jupyter",
+          "--config",
+          "application",
+          "--templateData",
+          "{'jupyter_version':'notebook-6.0.3'}"
+        };
 
     ApplicationArgs jArgs = new ApplicationArgs();
     JCommander cmd = JCommander.newBuilder().addObject(jArgs).build();
@@ -58,42 +68,32 @@ public class ApplicationArgsTest {
   }
 
   @Test
-  public void testApplicationArgs_whenExtraArgsPassedIn() {
-    String[] args = setArgs();
-    String[] newArgs = new String[7];
-    for (int idx = 0; idx < 6; idx++) {
-      newArgs[idx] = args[idx];
-    }
-    newArgs[6] = "extra";
+  public void parse_whenExtraArgsPassedIn_parseFailed() {
+    String[] args =
+        new String[] {
+          "--app",
+          "jupyter",
+          "--configPath",
+          "application",
+          "--templateData",
+          "{'jupyter_version':'notebook-6.0.3'}",
+          "extra"
+        };
 
     ApplicationArgs jArgs = new ApplicationArgs();
     JCommander cmd = JCommander.newBuilder().addObject(jArgs).build();
 
-    assertThrows(ParameterException.class, () -> cmd.parse(newArgs));
+    assertThrows(ParameterException.class, () -> cmd.parse(args));
   }
 
   @Test
-  public void testApplicationArgs_whenArgsContentMissing() {
-    String[] args = setArgs();
-    String[] newArgs = new String[5];
-    for (int idx = 0; idx < 5; idx++) {
-      newArgs[idx] = args[idx];
-    }
+  public void parse_whenArgsContentMissing_parseFailed() {
+    String[] args =
+        new String[] {"--app", "jupyter", "--configPath", "application", "--templateData"};
 
     ApplicationArgs jArgs = new ApplicationArgs();
     JCommander cmd = JCommander.newBuilder().addObject(jArgs).build();
 
-    assertThrows(ParameterException.class, () -> cmd.parse(newArgs));
-  }
-
-  private String[] setArgs() {
-    String[] args = new String[6];
-    args[0] = "--app";
-    args[1] = "jupyter";
-    args[2] = "--configPath";
-    args[3] = System.getProperty("user.dir") + "/application";
-    args[4] = "--templateData";
-    args[5] = "{'jupyter_version':'0.0.3'}";
-    return args;
+    assertThrows(ParameterException.class, () -> cmd.parse(args));
   }
 }
