@@ -17,81 +17,51 @@
 package tsunami.security.scanner.utilities;
 
 import static com.google.common.truth.Truth.assertThat;
-import static com.google.common.truth.Truth8.assertThat;
 import static org.junit.Assert.assertThrows;
 
+import com.google.common.collect.ImmutableMap;
 import freemarker.template.TemplateException;
 import java.io.File;
+import java.io.FileWriter;
 import java.io.IOException;
-import java.util.HashMap;
-import java.util.Map;
+import org.junit.Rule;
 import org.junit.Test;
+import org.junit.rules.TemporaryFolder;
 import org.junit.runner.RunWith;
 import org.junit.runners.JUnit4;
 
 @RunWith(JUnit4.class)
-public class FreeMarkerUtilTest {
+public final class FreeMarkerUtilTest {
+
+  @Rule
+  public TemporaryFolder folder = new TemporaryFolder();
 
   @Test
-  public void testFreeMarkerUtil() throws IOException, TemplateException {
-    Map<String, String> templateDataMap = new HashMap<>();
-    templateDataMap.put("jupyter_version", "0.0.3");
+  public void replaceTemplates_whenAllTemplatesMatched_success()
+      throws IOException, TemplateException {
+    ImmutableMap<String, String> templateDataMap =
+        ImmutableMap.of("jupyter_version", "notebook-6.0.3");
 
-    File configFile =
-        new File(System.getProperty("user.dir") + "/application/jupyter/jupyter.yaml");
+    File configFile = folder.newFile("test.yaml");
+    FileWriter writer = new FileWriter(configFile);
+    writer.write("jupyter_version:${jupyter_version}\n");
+    writer.close();
+
     String res = FreeMarkerUtil.replaceTemplates(templateDataMap, configFile);
 
-    String expected =
-        "apiVersion: v1\n"
-            + "kind: Service\n"
-            + "metadata:\n"
-            + "  name: jupyter\n"
-            + "  labels:\n"
-            + "    app: jupyter\n"
-            + "spec:\n"
-            + "  ports:\n"
-            + "  - port: 80\n"
-            + "    name: http\n"
-            + "    targetPort: 8888\n"
-            + "  selector:\n"
-            + "    app: jupyter\n"
-            + "  type: LoadBalancer\n"
-            + "---\n"
-            + "apiVersion: v1\n"
-            + "kind: Pod\n"
-            + "metadata:\n"
-            + "  name: jupyter\n"
-            + "  labels:\n"
-            + "    app: jupyter\n"
-            + "spec:\n"
-            + "  containers:\n"
-            + "    - name: jupyter\n"
-            + "      image: skippbox/jupyter:0.0.3\n"
-            + "      ports:\n"
-            + "      - containerPort: 8888\n"
-            + "        protocol: TCP\n"
-            + "        name: http\n"
-            + "      volumeMounts:\n"
-            + "        - mountPath: /root\n"
-            + "          name: notebook-volume\n"
-            + "  volumes:\n"
-            + "  - name: notebook-volume\n"
-            + "    gitRepo:\n"
-            + "      repository: \"https://github.com/kubernetes-client/python.git\"\n";
-
-    assertThat(res).isEqualTo(expected);
+    assertThat(res).isEqualTo("jupyter_version:notebook-6.0.3\n");
   }
 
   @Test
-  public void testFreeMarkerUtil_whenNoInputTemplateDataMatched()
+  public void replaceTemplates_whenNoTemplateDataMatched_failed()
       throws IOException, TemplateException {
-    Map<String, String> templateDataMap = new HashMap<>();
-    templateDataMap.put("mysql_version", "5.6");
-    templateDataMap.put("password", "dfhieuwhfhdsfj");
+    ImmutableMap<String, String> templateDataMap = ImmutableMap.of("mysql_version", "5.6");
 
-    // Missed data: ${jupyter_version}
-    File configFile =
-        new File(System.getProperty("user.dir") + "/application/jupyter/jupyter.yaml");
+    File configFile = folder.newFile("test.yaml");
+    FileWriter writer = new FileWriter(configFile);
+    writer.write("jupyter_version:${jupyter_version}\n");
+    writer.close();
+
     assertThrows(
         TemplateException.class,
         () -> FreeMarkerUtil.replaceTemplates(templateDataMap, configFile));
