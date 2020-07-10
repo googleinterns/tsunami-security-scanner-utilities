@@ -17,7 +17,6 @@
 package tsunami.security.scanner.utilities;
 
 import static com.google.common.truth.Truth.assertThat;
-import static com.google.common.truth.Truth8.assertThat;
 
 import com.google.gson.JsonSyntaxException;
 import io.kubernetes.client.openapi.ApiClient;
@@ -33,10 +32,11 @@ import org.junit.runner.RunWith;
 import org.junit.runners.JUnit4;
 
 @RunWith(JUnit4.class)
-public class KubeJavaClientUtilTest {
+public final class KubeJavaClientUtilTest {
 
   @Test
-  public void testKubeJavaClientUtil() throws IOException, ApiException, InterruptedException {
+  public void createResources_whenInputValid_success()
+      throws IOException, ApiException, InterruptedException {
     String resourceConfig =
         "apiVersion: v1\n"
             + "kind: Service\n"
@@ -62,7 +62,7 @@ public class KubeJavaClientUtilTest {
             + "spec:\n"
             + "  containers:\n"
             + "    - name: jupyter\n"
-            + "      image: skippbox/jupyter:0.0.3\n"
+            + "      image: jupyter/base-notebook:notebook-6.0.3\n"
             + "      ports:\n"
             + "      - containerPort: 8888\n"
             + "        protocol: TCP\n"
