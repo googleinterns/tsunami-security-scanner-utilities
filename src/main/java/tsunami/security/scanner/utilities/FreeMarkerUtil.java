@@ -47,8 +47,6 @@ public final class FreeMarkerUtil {
     String file = configFile.getName();
     String filePath = configFile.getPath();
     String path = filePath.substring(0, filePath.lastIndexOf("/"));
-    System.out.println("file: " + file);
-    System.out.println("path: " + path);
 
     // Set path for config templates
     cfg.setDirectoryForTemplateLoading(new File(path));
