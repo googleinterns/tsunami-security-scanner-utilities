@@ -39,12 +39,10 @@ import org.mockito.junit.MockitoRule;
 @RunWith(JUnit4.class)
 public final class AppTest {
 
+  @Rule public MockitoRule mockitoRule = MockitoJUnit.rule();
   @Rule public TemporaryFolder folder = new TemporaryFolder();
 
-  @Rule public MockitoRule mockitoRule = MockitoJUnit.rule();
-
   @Mock CoreV1Api mockCoreV1Api;
-
   @Mock AppsV1Api mockAppsV1Api;
 
   String resourceConfig =
@@ -84,10 +82,10 @@ public final class AppTest {
     KubeJavaClientUtil kubeJavaClientUtil = new KubeJavaClientUtil(mockCoreV1Api, mockAppsV1Api);
     App classUnderTest = new App(kubeJavaClientUtil);
 
-    V1Service resource = (V1Service) Yaml.load(resourceConfig);
     doThrow(new RuntimeException("Skip the service creation steps."))
         .when(mockCoreV1Api)
-        .createNamespacedService("default", resource, null, null, null);
+        .createNamespacedService(
+            "default", (V1Service) Yaml.load(resourceConfig), null, null, null);
 
     assertThrows(RuntimeException.class, () -> classUnderTest.run(args))
         .getMessage()
@@ -102,10 +100,10 @@ public final class AppTest {
     KubeJavaClientUtil kubeJavaClientUtil = new KubeJavaClientUtil(mockCoreV1Api, mockAppsV1Api);
     App classUnderTest = new App(kubeJavaClientUtil);
 
-    V1Service resource = (V1Service) Yaml.load(resourceConfig);
     doThrow(new RuntimeException("Skip the service creation steps."))
         .when(mockCoreV1Api)
-        .createNamespacedService("default", resource, null, null, null);
+        .createNamespacedService(
+            "default", (V1Service) Yaml.load(resourceConfig), null, null, null);
 
     assertThrows(RuntimeException.class, () -> classUnderTest.run(args))
         .getMessage()
