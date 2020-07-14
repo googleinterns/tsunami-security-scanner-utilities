@@ -58,6 +58,7 @@ public final class KubeJavaClientUtilTest {
             + "  selector:\n"
             + "    app: jupyter\n"
             + "  type: LoadBalancer\n";
+
     KubeJavaClientUtil kubeJavaClientUtil = new KubeJavaClientUtil(mockCoreV1Api, mockAppsV1Api);
     kubeJavaClientUtil.createResources(resourceConfig);
 

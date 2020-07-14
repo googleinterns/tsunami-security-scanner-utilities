@@ -71,7 +71,7 @@ public final class KubeJavaClientUtil {
     coreV1Api.createNamespacedPersistentVolumeClaim("default", v1Pvc, null, null, null);
   }
 
-  public static void createService(V1Service v1Service) throws ApiException {
+  private static void createService(V1Service v1Service) throws ApiException {
     coreV1Api.createNamespacedService("default", v1Service, null, null, null);
   }
 
