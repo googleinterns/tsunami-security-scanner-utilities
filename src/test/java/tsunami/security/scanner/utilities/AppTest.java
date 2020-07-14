@@ -89,7 +89,9 @@ public final class AppTest {
         .when(mockCoreV1Api)
         .createNamespacedService("default", resource, null, null, null);
 
-    assertThrows(RuntimeException.class, () -> classUnderTest.run(args));
+    assertThrows(RuntimeException.class, () -> classUnderTest.run(args))
+        .getMessage()
+        .contains("Skip the service creation steps.");
   }
 
   @Test
@@ -105,7 +107,9 @@ public final class AppTest {
         .when(mockCoreV1Api)
         .createNamespacedService("default", resource, null, null, null);
 
-    assertThrows(RuntimeException.class, () -> classUnderTest.run(args));
+    assertThrows(RuntimeException.class, () -> classUnderTest.run(args))
+        .getMessage()
+        .contains("Skip the service creation steps.");
   }
 
   @Test
