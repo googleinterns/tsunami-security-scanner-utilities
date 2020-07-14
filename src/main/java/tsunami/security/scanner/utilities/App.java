@@ -17,6 +17,7 @@
 package tsunami.security.scanner.utilities;
 
 import static com.google.common.base.Strings.isNullOrEmpty;
+
 import com.beust.jcommander.JCommander;
 import com.google.common.io.Files;
 import freemarker.template.TemplateException;
@@ -30,7 +31,7 @@ import java.io.IOException;
 import java.util.Map;
 
 public class App {
-  KubeJavaClientUtil kubeJavaClientUtil;
+  private final KubeJavaClientUtil kubeJavaClientUtil;
 
   public App(KubeJavaClientUtil kubeJavaClientUtil) {
     this.kubeJavaClientUtil = kubeJavaClientUtil;
@@ -61,25 +62,20 @@ public class App {
     Map<String, String> templateDataMap = TemplateDataUtil.parseTemplateDataJson(templateData);
 
     // Load all application's config files, run services and deploy the app on GKE.
-    try {
-      File configFiles = new File(configPath);
+    File configFiles = new File(configPath);
 
-      // Check if configFiles is an existed directory
-      if (!configFiles.isDirectory()) throw new FileNotFoundException("Wrong directory.");
+    // Check if configFiles is an existed directory
+    if (!configFiles.isDirectory()) throw new FileNotFoundException("Wrong directory.");
 
-      // Traverse all files under certain application's config path
-      for (File configFile : Files.fileTraverser().depthFirstPreOrder(configFiles)) {
+    // Traverse all files under certain application's config path
+    for (File configFile : Files.fileTraverser().depthFirstPreOrder(configFiles)) {
 
-        if (configFile.isFile()) {
-          String resourceConfig = FreeMarkerUtil.replaceTemplates(templateDataMap, configFile);
+      if (configFile.isFile()) {
+        String resourceConfig = FreeMarkerUtil.replaceTemplates(templateDataMap, configFile);
 
-          // Parse all config to Kubernetes Objects and create them.
-          kubeJavaClientUtil.createResources(resourceConfig);
-        }
+        // Parse all config to Kubernetes Objects and create them.
+        kubeJavaClientUtil.createResources(resourceConfig);
       }
-    } catch (Exception e) {
-      e.printStackTrace();
-      throw e;
     }
   }
 
