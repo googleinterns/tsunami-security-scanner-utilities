@@ -30,10 +30,13 @@ import java.io.IOException;
 import java.util.Map;
 
 public class App {
+  KubeJavaClientUtil kubeJavaClientUtil;
 
-  public static void main(String[] args)
-      throws IOException, ApiException, ClassNotFoundException, TemplateException {
+  public App(KubeJavaClientUtil kubeJavaClientUtil) {
+    this.kubeJavaClientUtil = kubeJavaClientUtil;
+  }
 
+  public void run(String[] args) throws ApiException, TemplateException, IOException {
     // Parse args read from command line
     ApplicationArgs jArgs = new ApplicationArgs();
     JCommander helloCmd = JCommander.newBuilder().addObject(jArgs).build();
@@ -57,10 +60,6 @@ public class App {
     // Transform input template data Json String to Map.
     Map<String, String> templateDataMap = TemplateDataUtil.parseTemplateDataJson(templateData);
 
-    // Initialize Kubernetes Java Client Api.
-    ApiClient client = Config.defaultClient();
-    Configuration.setDefaultApiClient(client);
-
     // Load all application's config files, run services and deploy the app on GKE.
     try {
       File configFiles = new File(configPath);
@@ -75,16 +74,21 @@ public class App {
           String resourceConfig = FreeMarkerUtil.replaceTemplates(templateDataMap, configFile);
 
           // Parse all config to Kubernetes Objects and create them.
-          KubeJavaClientUtil.createResources(resourceConfig);
+          kubeJavaClientUtil.createResources(resourceConfig);
         }
       }
     } catch (Exception e) {
       e.printStackTrace();
       throw e;
     }
+  }
 
-    /* Example for creation of objects and deletion:
-     *   https://github.com/kubernetes-client/java/blob/master/examples/src/main/java/io/kubernetes/client/examples/YamlExample.java
-     */
+  public static void main(String[] args) throws IOException, ApiException, TemplateException {
+    // Initialize Kubernetes Java Client Api.
+    ApiClient client = Config.defaultClient();
+    Configuration.setDefaultApiClient(client);
+
+    App app = new App(new KubeJavaClientUtil());
+    app.run(args);
   }
 }
