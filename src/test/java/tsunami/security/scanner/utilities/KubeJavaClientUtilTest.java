@@ -16,27 +16,33 @@
 
 package tsunami.security.scanner.utilities;
 
-import static com.google.common.truth.Truth.assertThat;
-
-import com.google.gson.JsonSyntaxException;
-import io.kubernetes.client.openapi.ApiClient;
+import static org.mockito.Mockito.verify;
 import io.kubernetes.client.openapi.ApiException;
-import io.kubernetes.client.openapi.Configuration;
+import io.kubernetes.client.openapi.apis.AppsV1Api;
 import io.kubernetes.client.openapi.apis.CoreV1Api;
-import io.kubernetes.client.openapi.models.V1DeleteOptions;
-import io.kubernetes.client.util.Config;
+import io.kubernetes.client.openapi.models.V1Pod;
+import io.kubernetes.client.openapi.models.V1Service;
+import io.kubernetes.client.util.Yaml;
 import java.io.IOException;
-import java.util.List;
+import org.junit.Rule;
 import org.junit.Test;
 import org.junit.runner.RunWith;
 import org.junit.runners.JUnit4;
+import org.mockito.Mock;
+import org.mockito.junit.MockitoJUnit;
+import org.mockito.junit.MockitoRule;
 
 @RunWith(JUnit4.class)
 public final class KubeJavaClientUtilTest {
 
+  @Mock CoreV1Api mockCoreV1Api;
+
+  @Mock AppsV1Api mockAppsV1Api;
+
+  @Rule public MockitoRule mockitoRule = MockitoJUnit.rule();
+
   @Test
-  public void createResources_whenInputValid_success()
-      throws IOException, ApiException, InterruptedException {
+  public void createResources_whenInputServiceConfig_success() throws IOException, ApiException {
     String resourceConfig =
         "apiVersion: v1\n"
             + "kind: Service\n"
@@ -51,9 +57,19 @@ public final class KubeJavaClientUtilTest {
             + "    targetPort: 8888\n"
             + "  selector:\n"
             + "    app: jupyter\n"
-            + "  type: LoadBalancer\n"
-            + "---\n"
-            + "apiVersion: v1\n"
+            + "  type: LoadBalancer\n";
+    KubeJavaClientUtil kubeJavaClientUtil = new KubeJavaClientUtil(mockCoreV1Api, mockAppsV1Api);
+    kubeJavaClientUtil.createResources(resourceConfig);
+
+    V1Service resource = (V1Service) Yaml.load(resourceConfig);
+
+    verify(mockCoreV1Api).createNamespacedService("default", resource, null, null, null);
+  }
+
+  @Test
+  public void createResources_whenInputPodConfig_success() throws IOException, ApiException {
+    String resourceConfig =
+        "apiVersion: v1\n"
             + "kind: Pod\n"
             + "metadata:\n"
             + "  name: jupyter\n"
@@ -75,37 +91,11 @@ public final class KubeJavaClientUtilTest {
             + "    gitRepo:\n"
             + "      repository: \"https://github.com/kubernetes-client/python.git\"\n";
 
-    ApiClient client = Config.defaultClient();
-    Configuration.setDefaultApiClient(client);
+    KubeJavaClientUtil kubeJavaClientUtil = new KubeJavaClientUtil(mockCoreV1Api, mockAppsV1Api);
+    kubeJavaClientUtil.createResources(resourceConfig);
 
-    KubeJavaClientUtil.createResources(resourceConfig);
+    V1Pod resource = (V1Pod) Yaml.load(resourceConfig);
 
-    Thread.sleep(1000);
-
-    List<String> podList = KubeJavaClientUtil.getPods();
-    List<String> serviceList = KubeJavaClientUtil.getServices();
-
-    // Check started services and pods.
-    assertThat(serviceList).contains("jupyter");
-    assertThat(podList).contains("jupyter");
-
-    // Delete all created resources.
-    CoreV1Api coreV1Api = new CoreV1Api();
-
-    coreV1Api.deleteNamespacedService(
-        "jupyter", "default", null, null, null, null, null, new V1DeleteOptions());
-
-    try {
-      coreV1Api.deleteNamespacedPod(
-          "jupyter", "default", null, null, null, null, null, new V1DeleteOptions());
-    } catch (JsonSyntaxException e) {
-      if (e.getCause() instanceof IllegalStateException) {
-        IllegalStateException ise = (IllegalStateException) e.getCause();
-        if (ise.getMessage() == null
-            || !ise.getMessage().contains("Expected a string but was BEGIN_OBJECT")) throw e;
-      } else throw e;
-    }
-
-    Thread.sleep(10000);
+    verify(mockCoreV1Api).createNamespacedPod("default", resource, null, null, null);
   }
 }

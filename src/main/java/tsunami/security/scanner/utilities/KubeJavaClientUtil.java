@@ -24,8 +24,6 @@ import io.kubernetes.client.openapi.apis.CoreV1Api;
 import io.kubernetes.client.openapi.models.*;
 import io.kubernetes.client.util.Yaml;
 import java.io.IOException;
-import java.util.ArrayList;
-import java.util.List;
 
 /**
  * This class is a wrapper for Kubernetes Java Client Api
@@ -35,11 +33,18 @@ import java.util.List;
  */
 public final class KubeJavaClientUtil {
 
-  private static CoreV1Api coreV1Api = new CoreV1Api();
+  private static CoreV1Api coreV1Api;
 
-  private static AppsV1Api appsV1Api = new AppsV1Api();
+  private static AppsV1Api appsV1Api;
 
-  private KubeJavaClientUtil() {}
+  KubeJavaClientUtil() {
+    this(new CoreV1Api(), new AppsV1Api());
+  }
+
+  KubeJavaClientUtil(CoreV1Api coreV1Api, AppsV1Api appsV1Api) {
+    this.coreV1Api = coreV1Api;
+    this.appsV1Api = appsV1Api;
+  }
 
   @FunctionalInterface
   private interface ResourceCreator {
@@ -66,7 +71,7 @@ public final class KubeJavaClientUtil {
     coreV1Api.createNamespacedPersistentVolumeClaim("default", v1Pvc, null, null, null);
   }
 
-  private static void createService(V1Service v1Service) throws ApiException {
+  public static void createService(V1Service v1Service) throws ApiException {
     coreV1Api.createNamespacedService("default", v1Service, null, null, null);
   }
 
@@ -80,61 +85,5 @@ public final class KubeJavaClientUtil {
       ResourceCreator creator = apiCallByClass.get(resource.getClass());
       if (creator != null) creator.createResource(resource);
     }
-  }
-
-  public static List<String> getDeployments() throws ApiException {
-    List<String> deployments = new ArrayList<>();
-
-    V1DeploymentList v1DeploymentList =
-        appsV1Api.listNamespacedDeployment(
-            "default", null, null, null, null, null, null, null, null, null);
-
-    for (V1Deployment deployment : v1DeploymentList.getItems()) {
-      deployments.add(deployment.getMetadata().getName());
-    }
-
-    return deployments;
-  }
-
-  public static List<String> getPods() throws ApiException {
-    List<String> pods = new ArrayList<>();
-
-    V1PodList v1PodList =
-        coreV1Api.listNamespacedPod(
-            "default", null, null, null, null, null, null, null, null, null);
-
-    for (V1Pod pod : v1PodList.getItems()) {
-      pods.add(pod.getMetadata().getName());
-    }
-
-    return pods;
-  }
-
-  public static List<String> getServices() throws ApiException {
-    List<String> services = new ArrayList<>();
-
-    V1ServiceList v1ServiceList =
-        coreV1Api.listNamespacedService(
-            "default", null, null, null, null, null, null, null, null, null);
-
-    for (V1Service service : v1ServiceList.getItems()) {
-      services.add(service.getMetadata().getName());
-    }
-
-    return services;
-  }
-
-  public static List<String> getPvcs() throws ApiException {
-    List<String> pvcs = new ArrayList<>();
-
-    V1PersistentVolumeClaimList v1PvcList =
-        coreV1Api.listNamespacedPersistentVolumeClaim(
-            "default", null, null, null, null, null, null, null, null, null);
-
-    for (V1PersistentVolumeClaim deployment : v1PvcList.getItems()) {
-      pvcs.add(deployment.getMetadata().getName());
-    }
-
-    return pvcs;
   }
 }
