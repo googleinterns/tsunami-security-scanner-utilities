@@ -33,17 +33,28 @@ import java.io.IOException;
  */
 public final class KubeJavaClientUtil {
 
-  private static CoreV1Api coreV1Api;
+  private final CoreV1Api coreV1Api;
+  private final AppsV1Api appsV1Api;
+  // Use the map to relate a Class object to a Handler
+  private final ImmutableMap<Class, ResourceCreator> apiCallByClass;
 
-  private static AppsV1Api appsV1Api;
-
-  KubeJavaClientUtil() {
+  public KubeJavaClientUtil() {
     this(new CoreV1Api(), new AppsV1Api());
   }
 
-  KubeJavaClientUtil(CoreV1Api coreV1Api, AppsV1Api appsV1Api) {
+  public KubeJavaClientUtil(CoreV1Api coreV1Api, AppsV1Api appsV1Api) {
     this.coreV1Api = coreV1Api;
     this.appsV1Api = appsV1Api;
+    this.apiCallByClass =
+        ImmutableMap.of(
+            V1Deployment.class,
+            deployment -> createDeployment((V1Deployment) deployment),
+            V1PersistentVolumeClaim.class,
+            v1Pvc -> createPvc((V1PersistentVolumeClaim) v1Pvc),
+            V1Service.class,
+            v1Service -> createService((V1Service) v1Service),
+            V1Pod.class,
+            v1Pod -> createPod((V1Pod) v1Pod));
   }
 
   @FunctionalInterface
@@ -51,35 +62,23 @@ public final class KubeJavaClientUtil {
     void createResource(Object o) throws ApiException;
   }
 
-  // Use the map to relate a Class object to a Handler
-  private static final ImmutableMap<Class, ResourceCreator> apiCallByClass =
-      ImmutableMap.of(
-          V1Deployment.class,
-          deployment -> createDeployment((V1Deployment) deployment),
-          V1PersistentVolumeClaim.class,
-          v1Pvc -> createPvc((V1PersistentVolumeClaim) v1Pvc),
-          V1Service.class,
-          v1Service -> createService((V1Service) v1Service),
-          V1Pod.class,
-          v1Pod -> createPod((V1Pod) v1Pod));
-
-  private static void createDeployment(V1Deployment v1Deployment) throws ApiException {
+  private void createDeployment(V1Deployment v1Deployment) throws ApiException {
     appsV1Api.createNamespacedDeployment("default", v1Deployment, null, null, null);
   }
 
-  private static void createPvc(V1PersistentVolumeClaim v1Pvc) throws ApiException {
+  private void createPvc(V1PersistentVolumeClaim v1Pvc) throws ApiException {
     coreV1Api.createNamespacedPersistentVolumeClaim("default", v1Pvc, null, null, null);
   }
 
-  private static void createService(V1Service v1Service) throws ApiException {
+  private void createService(V1Service v1Service) throws ApiException {
     coreV1Api.createNamespacedService("default", v1Service, null, null, null);
   }
 
-  private static void createPod(V1Pod v1Pod) throws ApiException {
+  private void createPod(V1Pod v1Pod) throws ApiException {
     coreV1Api.createNamespacedPod("default", v1Pod, null, null, null);
   }
 
-  public static void createResources(String resourceConfig) throws ApiException, IOException {
+  public void createResources(String resourceConfig) throws ApiException, IOException {
     ImmutableList<Object> resources = ImmutableList.copyOf(Yaml.loadAll(resourceConfig));
     for (Object resource : resources) {
       ResourceCreator creator = apiCallByClass.get(resource.getClass());

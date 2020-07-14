@@ -35,11 +35,10 @@ import org.mockito.junit.MockitoRule;
 @RunWith(JUnit4.class)
 public final class KubeJavaClientUtilTest {
 
-  @Mock CoreV1Api mockCoreV1Api;
-
-  @Mock AppsV1Api mockAppsV1Api;
-
   @Rule public MockitoRule mockitoRule = MockitoJUnit.rule();
+
+  @Mock CoreV1Api mockCoreV1Api;
+  @Mock AppsV1Api mockAppsV1Api;
 
   @Test
   public void createResources_whenInputServiceConfig_success() throws IOException, ApiException {
@@ -62,9 +61,9 @@ public final class KubeJavaClientUtilTest {
     KubeJavaClientUtil kubeJavaClientUtil = new KubeJavaClientUtil(mockCoreV1Api, mockAppsV1Api);
     kubeJavaClientUtil.createResources(resourceConfig);
 
-    V1Service resource = (V1Service) Yaml.load(resourceConfig);
-
-    verify(mockCoreV1Api).createNamespacedService("default", resource, null, null, null);
+    verify(mockCoreV1Api)
+        .createNamespacedService(
+            "default", (V1Service) Yaml.load(resourceConfig), null, null, null);
   }
 
   @Test
@@ -95,8 +94,7 @@ public final class KubeJavaClientUtilTest {
     KubeJavaClientUtil kubeJavaClientUtil = new KubeJavaClientUtil(mockCoreV1Api, mockAppsV1Api);
     kubeJavaClientUtil.createResources(resourceConfig);
 
-    V1Pod resource = (V1Pod) Yaml.load(resourceConfig);
-
-    verify(mockCoreV1Api).createNamespacedPod("default", resource, null, null, null);
+    verify(mockCoreV1Api)
+        .createNamespacedPod("default", (V1Pod) Yaml.load(resourceConfig), null, null, null);
   }
 }
