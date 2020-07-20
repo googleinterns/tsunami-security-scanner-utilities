@@ -1,0 +1,23 @@
+apiVersion: batch/v1
+kind: Job
+metadata:
+  name: testbed-deployer
+spec:
+  template:
+    spec:
+      containers:
+      - name: testbed-deployer
+        image: gcr.io/yuxin-intern-experimental-1/tsunami-test-demo-image
+        command:
+        - /usr/bin/java
+        args:
+        - -jar
+        - tsunami-test-demo.jar
+        - --app
+        - jupyter
+        - --configPath
+        - /application
+        - --templateData
+        - "{'jupyter_version':'notebook-6.0.3'}"
+      restartPolicy: Never
+  backoffLimit: 1
