@@ -1,4 +1,4 @@
-FROM debian:latest
+FROM openjdk:13-jdk-slim-buster
 
 RUN \
 apt-get update -y && \

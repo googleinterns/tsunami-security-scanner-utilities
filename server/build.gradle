@@ -19,7 +19,7 @@ jar {
 dependencies {
   implementation project(':api')
   implementation project(':demo')
-  compile 'commons-cli:commons-cli:1.3'
+  implementation 'commons-cli:commons-cli:1.3'
 
   implementation 'com.google.guava:guava:29.0-jre'
   implementation 'io.kubernetes:client-java:8.0.2'

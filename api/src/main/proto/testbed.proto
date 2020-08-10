@@ -25,7 +25,7 @@ import "google/protobuf/empty.proto";
 //import "google/api/annotations.proto";
 
 // gRPC APIs for Testbed.
-service Testbed {
+service TsunamiTestbed {
 
   // Create a deployment for a certain application.
   rpc CreateDeployment(CreateDeploymentRequest) returns (CreateDeploymentResponse) {
@@ -48,11 +48,13 @@ service Testbed {
 
 message CreateDeploymentRequest {
   // Application's name.
-  string app = 1;
+  string application = 1;
   // Path of config files.
   string configPath = 2;
   // Template data such as version and password in json format.
   string templateData = 3;
+  // Path of deployer Job. Example: ${projectDir}/deployer-job.yaml
+  string deployerJobPath = 4;
 }
 
 message CreateDeploymentResponse {
@@ -62,15 +64,22 @@ message CreateDeploymentResponse {
 
 message ListApplicationsResponse {
   // List of application names
-  repeated string applicationsList = 1;
+  repeated string applications = 1;
 }
 
 message GetApplicationRequest {
   // Application's name.
-  string app = 1;
+  string application = 1;
 }
 
 message GetApplicationResponse {
-  // Application's ip address.
+  // Application's service endpoint information.
+  ServiceEndpoint serviceEndpoint = 1;
+}
+
+message ServiceEndpoint {
+  // Service's external ip address.
   string ip = 1;
+  // Service's port info.
+  string port = 2;
 }
