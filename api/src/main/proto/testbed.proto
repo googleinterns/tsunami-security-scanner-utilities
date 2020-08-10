@@ -1,0 +1,76 @@
+/*
+ * Copyright 2020 Google LLC
+ *
+ * Licensed under the Apache License, Version 2.0 (the "License");
+ * you may not use this file except in compliance with the License.
+ * You may obtain a copy of the License at
+ *
+ *     https://www.apache.org/licenses/LICENSE-2.0
+ *
+ * Unless required by applicable law or agreed to in writing, software
+ * distributed under the License is distributed on an "AS IS" BASIS,
+ * WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
+ * See the License for the specific language governing permissions and
+ * limitations under the License.
+ */
+syntax = "proto3";
+
+package tsunami.security.scanner.utilities;
+
+option java_multiple_files = true;
+option java_outer_classname = "TestbedProto";
+option java_package = "com.google.tsunami.security.scanner.utilities";
+
+import "google/protobuf/empty.proto";
+//import "google/api/annotations.proto";
+
+// gRPC APIs for Testbed.
+service Testbed {
+
+  // Create a deployment for a certain application.
+  rpc CreateDeployment(CreateDeploymentRequest) returns (CreateDeploymentResponse) {
+    // option (google.api.http) = {
+    // post: "/v1/createDeployment"
+    // body: "*"
+    // };
+  }
+
+  // List all running applications on GKE
+  rpc ListApplications(google.protobuf.Empty) returns (ListApplicationsResponse) {
+    // option (google.api.http) = { get: "/v1/applicationList" };
+  }
+
+  // Get application's LoadBalancer IP Address
+  rpc GetApplication(GetApplicationRequest) returns (GetApplicationResponse) {
+    // option (google.api.http) = { get: "/v1/application/{app}" };
+  }
+}
+
+message CreateDeploymentRequest {
+  // Application's name.
+  string app = 1;
+  // Path of config files.
+  string configPath = 2;
+  // Template data such as version and password in json format.
+  string templateData = 3;
+}
+
+message CreateDeploymentResponse {
+  // Unique id of created kubernetes job.
+  string jobId = 1;
+}
+
+message ListApplicationsResponse {
+  // List of application names
+  repeated string applicationsList = 1;
+}
+
+message GetApplicationRequest {
+  // Application's name.
+  string app = 1;
+}
+
+message GetApplicationResponse {
+  // Application's ip address.
+  string ip = 1;
+}
