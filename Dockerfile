@@ -1,10 +1,11 @@
-FROM debian:latest
+FROM openjdk:13-jdk-slim-buster
 
-RUN \
-apt-get update -y && \
-apt-get install default-jre -y
+RUN apt-get update \
+    && apt-get -y -q upgrade \
+    && rm -rf /var/lib/apt/lists/*
 
-ADD ./build/libs/tsunami-security-scanner-utilities-all.jar tsunami-test-demo.jar
-ADD ./application /application
+ADD ./server/build/libs/server-1.0-all.jar /testbed/server.jar
 
-CMD java -jar tsunami-test-demo.jar --app jupyter --configPath /application --templateData {'jupyter_version':'notebook-6.0.3'}
+EXPOSE 8000
+
+ENTRYPOINT ["java", "-jar", "/testbed/server.jar"]

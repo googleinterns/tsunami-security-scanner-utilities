@@ -1,0 +1,45 @@
+# NOTE: Replace ${GCLOUD_PROJECT} with your gcloud project id.
+#       Replace ${SERVICE_NAME} with gRPC service name. Example: testbed.endpoints.${GCLOUD_PROJECT}.cloud.goog
+apiVersion: v1
+kind: Service
+metadata:
+  name: testbed-grpc
+spec:
+  ports:
+  - port: 80
+    targetPort: 9000
+    protocol: TCP
+    name: http
+  selector:
+    app: testbed-grpc
+  type: LoadBalancer
+---
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: testbed-grpc
+spec:
+  replicas: 1
+  selector:
+    matchLabels:
+      app: testbed-grpc
+  template:
+    metadata:
+      labels:
+        app: testbed-grpc
+    spec:
+      containers:
+      - name: esp
+        image: gcr.io/endpoints-release/endpoints-runtime:1
+        args: [
+          "--http2_port=9000",
+          "--backend=grpc://127.0.0.1:50051",
+          "--service=SERVICE_NAME",
+          "--rollout_strategy=managed",
+        ]
+        ports:
+          - containerPort: 9000
+      - name: testbed-grpc-server
+        image: gcr.io/GCLOUD_PROJECT/testbed-grpc-server:1.0
+        ports:
+          - containerPort: 50051

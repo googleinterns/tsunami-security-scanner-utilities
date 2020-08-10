@@ -1,0 +1,6 @@
+rootProject.name = 'tsunami-security-scanner-utilities'
+
+include ':deployer'
+include ':api'
+include ':server'
+include ':client'

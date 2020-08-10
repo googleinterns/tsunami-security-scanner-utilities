@@ -1,0 +1,15 @@
+type: google.api.Service
+config_version: 3
+
+#
+# Name of the service configuration.
+# NOTE: Replace ${MY_PROJECT_ID} with your gcloud project id.
+#
+name: testbed.endpoints.MY_PROJECT_ID.cloud.goog
+
+#
+# API title to appear in the user interface (Google Cloud Console).
+#
+title: Testbed gRPC API
+apis:
+- name: tsunami.security.scanner.utilities.Testbed
