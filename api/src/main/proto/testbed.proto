@@ -50,16 +50,16 @@ message CreateDeploymentRequest {
   // Application's name.
   string application = 1;
   // Path of config files.
-  string configPath = 2;
+  string config_path = 2;
   // Template data such as version and password in json format.
-  string templateData = 3;
+  string template_data = 3;
   // Path of deployer Job. Example: ${projectDir}/deployer-job.yaml
-  string deployerJobPath = 4;
+  string deployer_job_path = 4;
 }
 
 message CreateDeploymentResponse {
   // Unique id of created kubernetes job.
-  string jobId = 1;
+  string job_id = 1;
 }
 
 message ListApplicationsResponse {
@@ -74,7 +74,7 @@ message GetApplicationRequest {
 
 message GetApplicationResponse {
   // Application's service endpoint information.
-  ServiceEndpoint serviceEndpoint = 1;
+  ServiceEndpoint service_endpoint = 1;
 }
 
 message ServiceEndpoint {
