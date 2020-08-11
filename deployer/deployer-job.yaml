@@ -14,10 +14,10 @@ spec:
         - -jar
         - tsunami-test-demo.jar
         - --app
-        - jupyter
+        - ${app}
         - --configPath
-        - /application
+        - ${configPath}
         - --templateData
-        - "{'jupyter_version':'notebook-6.0.3'}"
+        - ${templateData}
       restartPolicy: Never
   backoffLimit: 1
