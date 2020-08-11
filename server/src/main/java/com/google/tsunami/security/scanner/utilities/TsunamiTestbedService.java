@@ -19,7 +19,9 @@ package com.google.tsunami.security.scanner.utilities;
 import com.google.protobuf.Empty;
 import io.grpc.stub.StreamObserver;
 
-/** Implements the Tsunami Testbed GRPC service. */
+/**
+ * Implements the Tsunami Testbed GRPC service.
+ */
 public final class TsunamiTestbedService extends TsunamiTestbedGrpc.TsunamiTestbedImplBase {
   private final TsunamiTestbedUtil util;
 

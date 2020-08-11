@@ -31,7 +31,9 @@ import org.apache.commons.cli.Option;
 import org.apache.commons.cli.Options;
 import org.apache.commons.cli.ParseException;
 
-/** Builds and starts a GRPC-based Tsunami Testbed server. */
+/**
+ * Builds and starts a GRPC-based Tsunami Testbed server.
+ */
 public final class TsunamiTestbedServer {
 
   private static final int DEFAULT_PORT = 8000;

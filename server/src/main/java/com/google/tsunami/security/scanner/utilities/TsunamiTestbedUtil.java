@@ -25,7 +25,9 @@ import java.io.IOException;
 import java.util.ArrayList;
 import java.util.List;
 
-/** The internal implementation of grpc requests. */
+/**
+ * The internal implementation of grpc requests.
+ */
 final class TsunamiTestbedUtil {
 
   private final Object lock;
@@ -135,7 +137,7 @@ final class TsunamiTestbedUtil {
           try {
             List<V1LoadBalancerIngress> svcIP = svc.getStatus().getLoadBalancer().getIngress();
             for (V1LoadBalancerIngress ip : svcIP) {
-              System.out.println("IP: " + ip.getIp());
+              System.out.println("Application " + application + "'s IP: " + ip.getIp());
               serviceEndpoint.toBuilder().setIp(ip.getIp()).build();
             }
           } catch (NullPointerException e) {
@@ -145,7 +147,7 @@ final class TsunamiTestbedUtil {
           // Get service's port.
           List<V1ServicePort> ports = svc.getSpec().getPorts();
           for (V1ServicePort port : ports) {
-            System.out.println("jupyter port: " + port.getPort());
+            System.out.println("Application " + application + "'s port: " + port.getPort());
             serviceEndpoint.toBuilder().setPort(port.getPort().toString()).build();
           }
         }

@@ -35,7 +35,9 @@ import org.apache.commons.cli.Option;
 import org.apache.commons.cli.Options;
 import org.apache.commons.cli.ParseException;
 
-/** A client application which calls the Testbed API over gRPC. */
+/**
+ * A client application which calls the Testbed API over gRPC.
+ */
 public final class TsunamiTestbedClient {
 
   private static final String DEFAULT_ADDRESS = "localhost:8000";
