@@ -19,6 +19,7 @@ package com.google.tsunami.security.scanner.utilities;
 import com.beust.jcommander.JCommander;
 import com.beust.jcommander.Parameter;
 import com.beust.jcommander.ParameterException;
+import com.beust.jcommander.Parameters;
 import com.google.protobuf.Empty;
 import io.grpc.CallOptions;
 import io.grpc.Channel;
@@ -36,79 +37,44 @@ public final class TsunamiTestbedClient {
 
   private static final String DEFAULT_ADDRESS = "localhost:8000";
 
+  @Parameters
   private static class TsunamiTestbedClientArgs {
     @Parameter(
         names = "--tsunami_testbed",
         description = "The address of the Tsunami Testbed server")
-    private String address = DEFAULT_ADDRESS;
+    public String address = DEFAULT_ADDRESS;
 
     @Parameter(names = "--api_key", description = "The API key to use for RPC calls.")
-    private String apiKey;
+    public String apiKey;
 
     @Parameter(names = "--auth_token", description = "The auth token to use for RPC calls.")
-    private String authToken;
+    public String authToken;
 
     @Parameter(
         names = "--operation",
         description =
             "The tsunamiTestbed operation to perform: createDeployment|listApplications|getApplication")
-    private String operation = "listApplications";
+    public String operation = "listApplications";
 
     @Parameter(names = "--app", description = "Application's name.")
-    private String app = "jupyter";
+    public String app = "jupyter";
 
     @Parameter(names = "--config_path", description = "Path of application config files.")
-    private String configPath = "/application";
+    public String configPath = "/application";
 
     @Parameter(
         names = "--template_data",
         description = "Template Data needs to be substituted in Json String type.")
-    private String templateData = "\"{'jupyter_version':'notebook-6.0.3'}\"";
+    public String templateData = "\"{'jupyter_version':'notebook-6.0.3'}\"";
 
     @Parameter(names = "--deployer_job_path", description = "Path for deployer job yaml file.")
-    private String deployerJobPath = ".";
+    public String deployerJobPath = ".";
 
     @Parameter(
         names = {"--help", "-h"},
         description = "Print parameters and description.",
         help = true)
-    private boolean help = false;
-
-    public String getAddress() {
-      return address;
-    }
-
-    public String getApiKey() {
-      return apiKey;
-    }
-
-    public String getAuthToken() {
-      return authToken;
-    }
-
-    public String getOperation() {
-      return operation;
-    }
-
-    public String getApp() {
-      return app;
-    }
-
-    public String getConfigPath() {
-      return configPath;
-    }
-
-    public String getTemplateData() {
-      return templateData;
-    }
-
-    public String getDeployerJobPath() {
-      return deployerJobPath;
-    }
-
-    public boolean isHelp() {
-      return help;
-    }
+    public boolean help = false;
   }
 
   public static void main(String[] args) throws Exception {
@@ -116,7 +82,7 @@ public final class TsunamiTestbedClient {
     JCommander jCommander = JCommander.newBuilder().addObject(clientArgs).build();
     try {
       jCommander.parse(args);
-      if (clientArgs.isHelp()) {
+      if (clientArgs.help) {
         jCommander.usage();
         return;
       }
@@ -125,14 +91,14 @@ public final class TsunamiTestbedClient {
       return;
     }
 
-    String address = clientArgs.getAddress();
-    String apiKey = clientArgs.getApiKey();
-    String authToken = clientArgs.getAuthToken();
-    String operation = clientArgs.getOperation();
-    String appName = clientArgs.getApp();
-    String configPath = clientArgs.getConfigPath();
-    String templateData = clientArgs.getTemplateData();
-    String deployerJobPath = clientArgs.getDeployerJobPath();
+    String address = clientArgs.address;
+    String apiKey = clientArgs.apiKey;
+    String authToken = clientArgs.authToken;
+    String operation = clientArgs.operation;
+    String appName = clientArgs.app;
+    String configPath = clientArgs.configPath;
+    String templateData = clientArgs.templateData;
+    String deployerJobPath = clientArgs.deployerJobPath;
 
     // Create gRPC stub.
     TsunamiTestbedGrpc.TsunamiTestbedBlockingStub testbed =

@@ -44,7 +44,6 @@ public final class TsunamiTestbedService extends TsunamiTestbedGrpc.TsunamiTestb
       responseObserver.onCompleted();
     } catch (Throwable t) {
       responseObserver.onError(t);
-      return;
     }
   }
 
@@ -58,7 +57,6 @@ public final class TsunamiTestbedService extends TsunamiTestbedGrpc.TsunamiTestb
       responseObserver.onCompleted();
     } catch (Throwable t) {
       responseObserver.onError(t);
-      return;
     }
   }
 
@@ -74,7 +72,6 @@ public final class TsunamiTestbedService extends TsunamiTestbedGrpc.TsunamiTestb
       responseObserver.onCompleted();
     } catch (Throwable t) {
       responseObserver.onError(t);
-      return;
     }
   }
 }

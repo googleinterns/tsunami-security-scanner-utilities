@@ -19,6 +19,7 @@ package com.google.tsunami.security.scanner.utilities;
 import com.beust.jcommander.JCommander;
 import com.beust.jcommander.Parameter;
 import com.beust.jcommander.ParameterException;
+import com.beust.jcommander.Parameters;
 import io.grpc.Server;
 import io.grpc.ServerBuilder;
 import io.kubernetes.client.openapi.ApiClient;
@@ -32,26 +33,19 @@ public final class TsunamiTestbedServer {
 
   private static final int DEFAULT_PORT = 8000;
 
+  @Parameters
   private static class TsunamiTestbedServerArgs {
     @Parameter(
         names = "--port",
         description = "The port on which the server listens.",
         validateWith = ValidPort.class)
-    private int port = DEFAULT_PORT;
+    public int port = DEFAULT_PORT;
 
     @Parameter(
         names = {"--help", "-h"},
         description = "Print parameters and description.",
         help = true)
-    private boolean help = false;
-
-    public int getPort() {
-      return port;
-    }
-
-    public boolean isHelp() {
-      return help;
-    }
+    public boolean help = false;
   }
 
   public static void main(String[] args) throws Exception {
@@ -59,7 +53,7 @@ public final class TsunamiTestbedServer {
     JCommander jCommander = JCommander.newBuilder().addObject(serverArgs).build();
     try {
       jCommander.parse(args);
-      if (serverArgs.isHelp()) {
+      if (serverArgs.help) {
         jCommander.usage();
         return;
       }
@@ -68,7 +62,7 @@ public final class TsunamiTestbedServer {
       return;
     }
 
-    int port = serverArgs.getPort();
+    int port = serverArgs.port;
 
     ApiClient client = Config.defaultClient();
     Configuration.setDefaultApiClient(client);
