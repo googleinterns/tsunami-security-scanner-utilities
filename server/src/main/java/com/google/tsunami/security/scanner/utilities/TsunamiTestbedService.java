@@ -68,7 +68,7 @@ public final class TsunamiTestbedService extends TsunamiTestbedGrpc.TsunamiTestb
     try {
       GetApplicationResponse response =
           GetApplicationResponse.newBuilder()
-              .setServiceEndpoint(util.getServiceEndpoint(request.getApplication()))
+              .setServiceEndpoint(util.getApplication(request.getApplication()))
               .build();
       responseObserver.onNext(response);
       responseObserver.onCompleted();

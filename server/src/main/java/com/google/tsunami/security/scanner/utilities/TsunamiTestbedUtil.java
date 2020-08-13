@@ -41,6 +41,7 @@ final class TsunamiTestbedUtil {
       throws IOException, TemplateException, ApiException, InterruptedException {
     String jobId = "initialID";
 
+    System.out.println("[GRPC REQUEST: CreateDeployment] Creating deployment of : " + application);
     System.out.println(
         "app: "
             + application
@@ -52,7 +53,6 @@ final class TsunamiTestbedUtil {
             + deployerJobPath);
 
     BatchV1Api batchV1Api = new BatchV1Api();
-    CoreV1Api coreV1Api = new CoreV1Api();
 
     File configFile = new File(deployerJobPath);
     // Replace template data in deployer yaml file.
@@ -86,7 +86,7 @@ final class TsunamiTestbedUtil {
   }
 
   public Iterable<String> listApplications() throws ApiException {
-    System.out.println("List running applications.");
+    System.out.println("[GRPC REQUEST: ListApplications] Listing all applications.");
 
     CoreV1Api coreV1Api = new CoreV1Api();
 
@@ -104,11 +104,12 @@ final class TsunamiTestbedUtil {
     return applications;
   }
 
-  public ServiceEndpoint getServiceEndpoint(String application) throws ApiException {
+  public ServiceEndpoint getApplication(String application) throws ApiException {
     // Set default ip and port.
     ServiceEndpoint.Builder serviceEndpointBuilder = ServiceEndpoint.newBuilder();
 
-    System.out.println("Getting ip and port information of : " + application);
+    System.out.println(
+        "[GRPC REQUEST: GetApplication] Getting ip and port information of : " + application);
 
     // Get services list.
     CoreV1Api coreV1Api = new CoreV1Api();
