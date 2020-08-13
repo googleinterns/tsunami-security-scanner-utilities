@@ -1,10 +1,11 @@
 plugins {
   id 'java'
   id 'application'
+  id 'com.github.sherter.google-java-format' version '0.9'
   id "com.github.johnrengelman.shadow" version "6.0.0"
 }
 
-mainClassName = "com.google.tsunami.security.scanner.utilities.TestbedClient"
+mainClassName = "com.google.tsunami.security.scanner.utilities.TsunamiTestbedClient"
 
 jar {
   manifest {
@@ -18,6 +19,7 @@ jar {
 dependencies {
   implementation project(':api')
   implementation 'commons-cli:commons-cli:1.3'
+  implementation 'com.beust:jcommander:1.78'
 }
 
 sourceSets {
