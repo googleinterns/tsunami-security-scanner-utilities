@@ -19,9 +19,7 @@ package com.google.tsunami.security.scanner.utilities;
 import com.google.protobuf.Empty;
 import io.grpc.stub.StreamObserver;
 
-/**
- * Implements the Tsunami Testbed GRPC service.
- */
+/** Implements the Tsunami Testbed GRPC service. */
 public final class TsunamiTestbedService extends TsunamiTestbedGrpc.TsunamiTestbedImplBase {
   private final TsunamiTestbedUtil util;
 
@@ -32,55 +30,51 @@ public final class TsunamiTestbedService extends TsunamiTestbedGrpc.TsunamiTestb
   @Override
   public void createDeployment(
       CreateDeploymentRequest request, StreamObserver<CreateDeploymentResponse> responseObserver) {
-    CreateDeploymentResponse response;
     try {
-      String curResponse =
-          util.createDeployment(
-              request.getApplication(),
-              request.getConfigPath(),
-              request.getTemplateData(),
-              request.getDeployerJobPath());
-      response = CreateDeploymentResponse.newBuilder().setJobId(curResponse).build();
+      CreateDeploymentResponse response =
+          CreateDeploymentResponse.newBuilder()
+              .setJobId(
+                  util.createDeployment(
+                      request.getApplication(),
+                      request.getConfigPath(),
+                      request.getTemplateData(),
+                      request.getDeployerJobPath()))
+              .build();
+      responseObserver.onNext(response);
+      responseObserver.onCompleted();
     } catch (Throwable t) {
       responseObserver.onError(t);
       return;
     }
-
-    responseObserver.onNext(response);
-    responseObserver.onCompleted();
   }
 
   @Override
   public void listApplications(
       Empty request, StreamObserver<ListApplicationsResponse> responseObserver) {
-    ListApplicationsResponse response;
     try {
-      response =
+      ListApplicationsResponse response =
           ListApplicationsResponse.newBuilder().addAllApplications(util.listApplications()).build();
+      responseObserver.onNext(response);
+      responseObserver.onCompleted();
     } catch (Throwable t) {
       responseObserver.onError(t);
       return;
     }
-
-    responseObserver.onNext(response);
-    responseObserver.onCompleted();
   }
 
   @Override
   public void getApplication(
       GetApplicationRequest request, StreamObserver<GetApplicationResponse> responseObserver) {
-    GetApplicationResponse response;
     try {
-      response =
+      GetApplicationResponse response =
           GetApplicationResponse.newBuilder()
               .setServiceEndpoint(util.getServiceEndpoint(request.getApplication()))
               .build();
+      responseObserver.onNext(response);
+      responseObserver.onCompleted();
     } catch (Throwable t) {
       responseObserver.onError(t);
       return;
     }
-
-    responseObserver.onNext(response);
-    responseObserver.onCompleted();
   }
 }

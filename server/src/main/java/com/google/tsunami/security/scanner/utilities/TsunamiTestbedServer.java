@@ -16,6 +16,9 @@
 
 package com.google.tsunami.security.scanner.utilities;
 
+import com.beust.jcommander.JCommander;
+import com.beust.jcommander.Parameter;
+import com.beust.jcommander.ParameterException;
 import io.grpc.Server;
 import io.grpc.ServerBuilder;
 import io.kubernetes.client.openapi.ApiClient;
@@ -23,51 +26,53 @@ import io.kubernetes.client.openapi.Configuration;
 import io.kubernetes.client.util.Config;
 import java.io.IOException;
 import java.util.concurrent.TimeUnit;
-import org.apache.commons.cli.CommandLine;
-import org.apache.commons.cli.CommandLineParser;
-import org.apache.commons.cli.DefaultParser;
-import org.apache.commons.cli.HelpFormatter;
-import org.apache.commons.cli.Option;
-import org.apache.commons.cli.Options;
-import org.apache.commons.cli.ParseException;
 
-/**
- * Builds and starts a GRPC-based Tsunami Testbed server.
- */
+/** Builds and starts a GRPC-based Tsunami Testbed server. */
 public final class TsunamiTestbedServer {
 
   private static final int DEFAULT_PORT = 8000;
 
+  private static class TsunamiTestbedServerArgs {
+    @Parameter(
+        names = "--port",
+        description = "The port on which the server listens.",
+        validateWith = ValidPort.class)
+    private int port = DEFAULT_PORT;
+
+    @Parameter(
+        names = {"--help", "-h"},
+        description = "Print parameters and description.",
+        help = true)
+    private boolean help = false;
+
+    public int getPort() {
+      return port;
+    }
+
+    public boolean isHelp() {
+      return help;
+    }
+  }
+
   public static void main(String[] args) throws Exception {
-    Options options = createOptions();
-    CommandLineParser parser = new DefaultParser();
-    CommandLine line;
+    TsunamiTestbedServerArgs serverArgs = new TsunamiTestbedServerArgs();
+    JCommander jCommander = JCommander.newBuilder().addObject(serverArgs).build();
     try {
-      line = parser.parse(options, args);
-    } catch (ParseException e) {
+      jCommander.parse(args);
+      if (serverArgs.isHelp()) {
+        jCommander.usage();
+        return;
+      }
+    } catch (ParameterException e) {
       System.err.println("Invalid command line: " + e.getMessage());
-      printUsage(options);
       return;
     }
 
-    //////////////////////////////////////////
+    int port = serverArgs.getPort();
 
     ApiClient client = Config.defaultClient();
     Configuration.setDefaultApiClient(client);
     System.out.println("Initialized Kubernetes Api Client.");
-
-    int port = DEFAULT_PORT;
-
-    if (line.hasOption("port")) {
-      String portOption = line.getOptionValue("port");
-      try {
-        port = Integer.parseInt(portOption);
-      } catch (java.lang.NumberFormatException e) {
-        System.err.println("Invalid port number: " + portOption);
-        printUsage(options);
-        return;
-      }
-    }
 
     final TsunamiTestbedUtil util = new TsunamiTestbedUtil();
     final TsunamiTestbedServer server = new TsunamiTestbedServer();
@@ -107,31 +112,5 @@ public final class TsunamiTestbedServer {
     if (server != null) {
       server.awaitTermination();
     }
-  }
-
-  private static Options createOptions() {
-    Options options = new Options();
-
-    // port
-    options.addOption(
-        Option.builder()
-            .longOpt("port")
-            .desc("The port on which the server listens.")
-            .hasArg()
-            .argName("port")
-            .type(Integer.class)
-            .build());
-
-    return options;
-  }
-
-  private static void printUsage(Options options) {
-    HelpFormatter formatter = new HelpFormatter();
-    formatter.printHelp(
-        "client",
-        "A simple Tsunami Testbed gRPC server for use with Endpoints.",
-        options,
-        "",
-        true);
   }
 }

@@ -16,6 +16,9 @@
 
 package com.google.tsunami.security.scanner.utilities;
 
+import com.beust.jcommander.JCommander;
+import com.beust.jcommander.Parameter;
+import com.beust.jcommander.ParameterException;
 import com.google.protobuf.Empty;
 import io.grpc.CallOptions;
 import io.grpc.Channel;
@@ -27,54 +30,124 @@ import io.grpc.ManagedChannelBuilder;
 import io.grpc.Metadata;
 import io.grpc.MethodDescriptor;
 import java.util.logging.Logger;
-import org.apache.commons.cli.CommandLine;
-import org.apache.commons.cli.CommandLineParser;
-import org.apache.commons.cli.DefaultParser;
-import org.apache.commons.cli.HelpFormatter;
-import org.apache.commons.cli.Option;
-import org.apache.commons.cli.Options;
-import org.apache.commons.cli.ParseException;
 
-/**
- * A client application which calls the Testbed API over gRPC.
- */
+/** A client application which calls the Testbed API over gRPC. */
 public final class TsunamiTestbedClient {
 
   private static final String DEFAULT_ADDRESS = "localhost:8000";
 
+  private static class TsunamiTestbedClientArgs {
+    @Parameter(
+        names = "--tsunami_testbed",
+        description = "The address of the Tsunami Testbed server")
+    private String address = DEFAULT_ADDRESS;
+
+    @Parameter(names = "--api_key", description = "The API key to use for RPC calls.")
+    private String apiKey;
+
+    @Parameter(names = "--auth_token", description = "The auth token to use for RPC calls.")
+    private String authToken;
+
+    @Parameter(
+        names = "--operation",
+        description =
+            "The tsunamiTestbed operation to perform: createDeployment|listApplications|getApplication")
+    private String operation = "listApplications";
+
+    @Parameter(names = "--app", description = "Application's name.")
+    private String app = "jupyter";
+
+    @Parameter(names = "--config_path", description = "Path of application config files.")
+    private String configPath = "/application";
+
+    @Parameter(
+        names = "--template_data",
+        description = "Template Data needs to be substituted in Json String type.")
+    private String templateData = "\"{'jupyter_version':'notebook-6.0.3'}\"";
+
+    @Parameter(names = "--deployer_job_path", description = "Path for deployer job yaml file.")
+    private String deployerJobPath = ".";
+
+    @Parameter(
+        names = {"--help", "-h"},
+        description = "Print parameters and description.",
+        help = true)
+    private boolean help = false;
+
+    public String getAddress() {
+      return address;
+    }
+
+    public String getApiKey() {
+      return apiKey;
+    }
+
+    public String getAuthToken() {
+      return authToken;
+    }
+
+    public String getOperation() {
+      return operation;
+    }
+
+    public String getApp() {
+      return app;
+    }
+
+    public String getConfigPath() {
+      return configPath;
+    }
+
+    public String getTemplateData() {
+      return templateData;
+    }
+
+    public String getDeployerJobPath() {
+      return deployerJobPath;
+    }
+
+    public boolean isHelp() {
+      return help;
+    }
+  }
+
   public static void main(String[] args) throws Exception {
-    Options options = createOptions();
-    CommandLineParser parser = new DefaultParser();
-    CommandLine params;
+    TsunamiTestbedClientArgs clientArgs = new TsunamiTestbedClientArgs();
+    JCommander jCommander = JCommander.newBuilder().addObject(clientArgs).build();
     try {
-      params = parser.parse(options, args);
-    } catch (ParseException e) {
+      jCommander.parse(args);
+      if (clientArgs.isHelp()) {
+        jCommander.usage();
+        return;
+      }
+    } catch (ParameterException e) {
       System.err.println("Invalid command line: " + e.getMessage());
-      printUsage(options);
       return;
     }
 
-    String address = params.getOptionValue("testbed", DEFAULT_ADDRESS);
-    String apiKey = params.getOptionValue("api_key");
-    String authToken = params.getOptionValue("auth_token");
-    String operation = params.getOptionValue("operation", "list");
-    String appName = params.getOptionValue("application", "jupyter");
-    String configPath = params.getOptionValue("config_path", "/application");
-    String templateData =
-        params.getOptionValue("template_data", "\"{'jupyter_version':'notebook-6.0.3'}\"");
-    String deployerJobPath = params.getOptionValue("deployter_job_path", ".");
+    String address = clientArgs.getAddress();
+    String apiKey = clientArgs.getApiKey();
+    String authToken = clientArgs.getAuthToken();
+    String operation = clientArgs.getOperation();
+    String appName = clientArgs.getApp();
+    String configPath = clientArgs.getConfigPath();
+    String templateData = clientArgs.getTemplateData();
+    String deployerJobPath = clientArgs.getDeployerJobPath();
 
     // Create gRPC stub.
     TsunamiTestbedGrpc.TsunamiTestbedBlockingStub testbed =
         createTestbedStub(address, apiKey, authToken);
 
-    // Run different requests based on operation input.
-    if ("createDeployment".equals(operation)) {
-      createDeployment(testbed, appName, configPath, templateData, deployerJobPath);
-    } else if ("listApplications".equals(operation)) {
-      listApplications(testbed);
-    } else if ("getApplication".equals(operation)) {
-      getApplication(testbed, appName);
+    switch (operation) {
+      case "createDevelopment":
+        createDeployment(testbed, appName, configPath, templateData, deployerJobPath);
+        break;
+      case "listApplications":
+        listApplications(testbed);
+        break;
+      case "getApplication":
+        getApplication(testbed, appName);
+        break;
     }
   }
 
@@ -84,13 +157,14 @@ public final class TsunamiTestbedClient {
       String configPath,
       String templateData,
       String deployerJobPath) {
-    CreateDeploymentRequest.Builder builder = CreateDeploymentRequest.newBuilder();
-    builder
-        .setApplication(appName)
-        .setConfigPath(configPath)
-        .setTemplateData(templateData)
-        .setDeployerJobPath(deployerJobPath);
-    CreateDeploymentResponse response = tsunamiTestbed.createDeployment(builder.build());
+    CreateDeploymentRequest createDeploymentRequest =
+        CreateDeploymentRequest.newBuilder()
+            .setApplication(appName)
+            .setConfigPath(configPath)
+            .setTemplateData(templateData)
+            .setDeployerJobPath(deployerJobPath)
+            .build();
+    CreateDeploymentResponse response = tsunamiTestbed.createDeployment(createDeploymentRequest);
     System.out.println(response);
   }
 
@@ -101,22 +175,22 @@ public final class TsunamiTestbedClient {
 
   static void getApplication(
       TsunamiTestbedGrpc.TsunamiTestbedBlockingStub tsunamiTestbed, String appName) {
-    GetApplicationRequest.Builder builder = GetApplicationRequest.newBuilder();
-    builder.setApplication(appName);
-    GetApplicationResponse response = tsunamiTestbed.getApplication(builder.build());
+    GetApplicationRequest getApplicationRequest =
+        GetApplicationRequest.newBuilder().setApplication(appName).build();
+    GetApplicationResponse response = tsunamiTestbed.getApplication(getApplicationRequest);
     System.out.println(response);
   }
 
   private static final class Interceptor implements ClientInterceptor {
-    private final String apiKey;
-    private final String authToken;
-
     private static Logger LOGGER = Logger.getLogger("InfoLogging");
 
     private static Metadata.Key<String> API_KEY_HEADER =
         Metadata.Key.of("x-api-key", Metadata.ASCII_STRING_MARSHALLER);
     private static Metadata.Key<String> AUTHORIZATION_HEADER =
         Metadata.Key.of("authorization", Metadata.ASCII_STRING_MARSHALLER);
+
+    private final String apiKey;
+    private final String authToken;
 
     public Interceptor(String apiKey, String authToken) {
       this.apiKey = apiKey;
@@ -155,98 +229,5 @@ public final class TsunamiTestbedClient {
     channel = ClientInterceptors.intercept(channel, new Interceptor(apiKey, authToken));
 
     return TsunamiTestbedGrpc.newBlockingStub(channel);
-  }
-
-  private static Options createOptions() {
-    Options options = new Options();
-
-    // tsunamiTestbed
-    options.addOption(
-        Option.builder()
-            .longOpt("tsunami_testbed")
-            .desc("The address of the Tsunami Testbed server")
-            .hasArg()
-            .argName("address")
-            .type(String.class)
-            .build());
-
-    // api_key
-    options.addOption(
-        Option.builder()
-            .longOpt("api_key")
-            .desc("The API key to use for RPC calls")
-            .hasArg()
-            .argName("key")
-            .type(String.class)
-            .build());
-
-    // auth_token
-    options.addOption(
-        Option.builder()
-            .longOpt("auth_token")
-            .desc("The auth token to use for RPC calls")
-            .hasArg()
-            .argName("token")
-            .type(String.class)
-            .build());
-
-    // operation
-    options.addOption(
-        Option.builder()
-            .longOpt("operation")
-            .desc(
-                "The tsunamiTestbed operation to perform: createDeployment|listApplications|getApplication")
-            .hasArg()
-            .argName("op")
-            .type(String.class)
-            .build());
-
-    options.addOption(
-        Option.builder()
-            .longOpt("application")
-            .desc("App name")
-            .hasArg()
-            .argName("ap")
-            .type(String.class)
-            .build());
-
-    options.addOption(
-        Option.builder()
-            .longOpt("config_path")
-            .desc("Path of config files.")
-            .hasArg()
-            .argName("cp")
-            .type(String.class)
-            .build());
-
-    options.addOption(
-        Option.builder()
-            .longOpt("template_data")
-            .desc("Template Data in json format")
-            .hasArg()
-            .argName("td")
-            .type(String.class)
-            .build());
-
-    options.addOption(
-        Option.builder()
-            .longOpt("deployer_job_path")
-            .desc("Path of deployer job's yaml file. Example: ${project_dir}/deployer_job.yaml .")
-            .hasArg()
-            .argName("jp")
-            .type(String.class)
-            .build());
-
-    return options;
-  }
-
-  private static void printUsage(Options options) {
-    HelpFormatter formatter = new HelpFormatter();
-    formatter.printHelp(
-        "client",
-        "A simple Tsunami Testbed gRPC client for use with Endpoints.",
-        options,
-        "",
-        true);
   }
 }
