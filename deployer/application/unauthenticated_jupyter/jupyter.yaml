@@ -1,0 +1,29 @@
+apiVersion: v1
+kind: Service
+metadata:
+  name: unauthenticated-jupyter
+  labels:
+    app: unauthenticated-jupyter
+spec:
+  ports:
+  - port: 80
+    name: http
+    targetPort: 8888
+  selector:
+    app: unauthenticated-jupyter
+  type: LoadBalancer
+---
+apiVersion: v1
+kind: Pod
+metadata:
+  name: unauthenticated-jupyter
+  labels:
+    app: unauthenticated-jupyter
+spec:
+  containers:
+    - name: unauthenticated-jupyter
+      image: jupyter/base-notebook
+      ports:
+      - containerPort: 8888
+      command: [ "start-notebook.sh" ]
+      args: [ "--NotebookApp.token=''" ]
