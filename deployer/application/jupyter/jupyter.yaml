@@ -13,24 +13,27 @@ spec:
     app: jupyter
   type: LoadBalancer
 ---
-apiVersion: v1
-kind: Pod
+apiVersion: apps/v1 # for versions before 1.9.0 use apps/v1beta2
+kind: Deployment
 metadata:
   name: jupyter
   labels:
     app: jupyter
 spec:
-  containers:
-    - name: jupyter
-      image: jupyter/base-notebook:${jupyter_version}
-      ports:
-      - containerPort: 8888
-        protocol: TCP
-        name: http
-      volumeMounts:
-        - mountPath: /root
-          name: notebook-volume
-  volumes:
-  - name: notebook-volume
-    gitRepo:
-      repository: "https://github.com/kubernetes-client/python.git"
+  selector:
+    matchLabels:
+      app: jupyter
+      tier: frontend
+  strategy:
+    type: Recreate
+  template:
+    metadata:
+      labels:
+        app: jupyter
+        tier: frontend
+    spec:
+      containers:
+      - name: jupyter
+        image: jupyter/base-notebook:${jupyter_version}
+        ports:
+        - containerPort: 8888

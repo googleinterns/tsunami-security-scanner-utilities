@@ -7,17 +7,17 @@ spec:
     spec:
       containers:
       - name: testbed-deployer
-        image: gcr.io/yuxin-intern-experimental-1/tsunami-test-demo-image
+        image: gcr.io/$$GCP_PROJECT$$/testbed-deployer:latest
         command:
-        - /usr/bin/java
+        - java
         args:
         - -jar
-        - tsunami-test-demo.jar
-        - --app
-        - ${app}
-        - --configPath
-        - ${configPath}
-        - --templateData
-        - ${templateData}
+        - /deployer/deployer.jar
+        - --app_name
+        - ${app_name}
+        - --config_path
+        - /deployer/application
+        - --template_data
+        - ${template_data}
       restartPolicy: Never
   backoffLimit: 1

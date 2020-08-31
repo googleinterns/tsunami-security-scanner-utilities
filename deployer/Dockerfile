@@ -1,10 +1,18 @@
-FROM openjdk:13-jdk-slim-buster
+FROM gradle:6.6.1-jdk11 AS builder
+COPY . /tmp/repo/
+WORKDIR /tmp/repo/
+RUN gradle shadowJar
 
-RUN \
-apt-get update -y && \
-apt-get install default-jre -y
+FROM openjdk:11-jdk-slim-buster
 
-ADD ./build/libs/tsunami-security-scanner-utilities-all.jar tsunami-test-demo.jar
-ADD ./application /application
+RUN apt-get update -y
 
-CMD java -jar tsunami-test-demo.jar --deployer jupyter --configPath /application --templateData {'jupyter_version':'notebook-6.0.3'}
+RUN mkdir /deployer
+COPY --from=builder /tmp/repo/build/libs/deployer.jar /deployer/deployer.jar
+COPY --from=builder /tmp/repo/application /deployer/application
+
+CMD \
+java -jar /deployer/deployer.jar \
+  --app_name=unauthenticated-jupyter \
+  --config_path=/deployer/application \
+  --template_data ''
