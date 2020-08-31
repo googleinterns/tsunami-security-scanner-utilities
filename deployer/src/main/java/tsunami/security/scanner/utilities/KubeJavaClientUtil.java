@@ -18,24 +18,28 @@ package tsunami.security.scanner.utilities;
 
 import com.google.common.collect.ImmutableList;
 import com.google.common.collect.ImmutableMap;
+import com.google.common.flogger.GoogleLogger;
 import io.kubernetes.client.openapi.ApiException;
 import io.kubernetes.client.openapi.apis.AppsV1Api;
 import io.kubernetes.client.openapi.apis.CoreV1Api;
-import io.kubernetes.client.openapi.models.*;
+import io.kubernetes.client.openapi.models.V1Deployment;
+import io.kubernetes.client.openapi.models.V1PersistentVolumeClaim;
+import io.kubernetes.client.openapi.models.V1Pod;
+import io.kubernetes.client.openapi.models.V1Service;
 import io.kubernetes.client.util.Yaml;
 import java.io.IOException;
 
 /**
- * This class is a wrapper for Kubernetes Java Client Api
- * Usage: KubeJavaClientUtil.createResources(File resourceConfigFile);
- * Purpose: Read in a Kubernetes config file for a certain application,
- *          parse it into resources needed and create them using Java Client Api.
+ * This class is a wrapper for Kubernetes Java Client Api Usage: KubeJavaClientUtil.createResources(File
+ * resourceConfigFile); Purpose: Read in a Kubernetes config file for a certain application, parse
+ * it into resources needed and create them using Java Client Api.
  */
 public final class KubeJavaClientUtil {
+  private static final GoogleLogger logger = GoogleLogger.forEnclosingClass();
 
   private final CoreV1Api coreV1Api;
   private final AppsV1Api appsV1Api;
-  // Use the map to relate a Class object to a Handler
+  // Use the map to relate a Class object to a Handler.
   private final ImmutableMap<Class, ResourceCreator> apiCallByClass;
 
   public KubeJavaClientUtil() {
@@ -79,10 +83,15 @@ public final class KubeJavaClientUtil {
   }
 
   public void createResources(String resourceConfig) throws ApiException, IOException {
+    logger.atInfo().log("Creating resources using config '%s'", resourceConfig);
     ImmutableList<Object> resources = ImmutableList.copyOf(Yaml.loadAll(resourceConfig));
     for (Object resource : resources) {
       ResourceCreator creator = apiCallByClass.get(resource.getClass());
-      if (creator != null) creator.createResource(resource);
+      if (creator == null) {
+        throw new AssertionError(String
+            .format("Missing ResourceCreator for %s", resource.getClass().getCanonicalName()));
+      }
+      creator.createResource(resource);
     }
   }
 }

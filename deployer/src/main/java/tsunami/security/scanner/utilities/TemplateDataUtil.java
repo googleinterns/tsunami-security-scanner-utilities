@@ -16,34 +16,32 @@
 
 package tsunami.security.scanner.utilities;
 
+import com.google.common.base.Strings;
+import com.google.common.collect.ImmutableMap;
 import com.google.gson.Gson;
 import com.google.gson.GsonBuilder;
 import com.google.gson.reflect.TypeToken;
 import java.lang.reflect.Type;
 import java.util.Map;
+import java.util.Optional;
 
 /**
- * This class is used for transforming input template data Json String to Map.
- * Usage: TemplateDataUtil.parseTemplateDataJson(String templateDataJson);
- * Input:
- *      templateDataJson: input template data in Json String type.
- * Output:
- *      A map which reflects a correspondence of input json keys and values.
- * Deprecated usage: FreeMarkerUtil.replaceTemplates(String version, String password, File configFile);
+ * This class is used for transforming input template data Json String to Map. Usage:
+ * TemplateDataUtil.parseTemplateDataJson(String templateDataJson); Input: templateDataJson: input
+ * template data in Json String type. Output: A map which reflects a correspondence of input json
+ * keys and values. Deprecated usage: FreeMarkerUtil.replaceTemplates(String version, String
+ * password, File configFile);
  */
 public final class TemplateDataUtil {
 
   private TemplateDataUtil() {}
 
-  public static Map<String, String> parseTemplateDataJson(String templateDataJson) {
-
-    GsonBuilder builder = new GsonBuilder();
-    builder.setPrettyPrinting();
-
-    Gson gson = builder.create();
-    Type type = new TypeToken<Map<String, String>>(){}.getType();
-    Map<String, String> templateDataMap = gson.fromJson(templateDataJson, type);
-
-    return templateDataMap;
+  public static ImmutableMap<String, String> parseTemplateDataJson(String templateDataJson) {
+    Gson gson = new GsonBuilder().setPrettyPrinting().create();
+    Type type = new TypeToken<Map<String, String>>() {}.getType();
+    return Optional.ofNullable(
+            gson.<Map<String, String>>fromJson(Strings.nullToEmpty(templateDataJson), type))
+        .map(ImmutableMap::copyOf)
+        .orElse(ImmutableMap.of());
   }
 }

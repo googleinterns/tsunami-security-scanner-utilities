@@ -19,9 +19,8 @@ package tsunami.security.scanner.utilities;
 import static com.google.common.truth.Truth.assertThat;
 import static org.junit.Assert.assertThrows;
 
+import com.google.common.collect.ImmutableMap;
 import com.google.gson.JsonSyntaxException;
-import java.util.HashMap;
-import java.util.Map;
 import org.junit.Test;
 import org.junit.runner.RunWith;
 import org.junit.runners.JUnit4;
@@ -34,7 +33,8 @@ public final class TemplateDataUtilTest {
     String templateDataJson =
         "{'mysql_version':'5.6','password':'dfhieuwhfhdsfj','wordpress_version':'4.8-apache'}";
 
-    Map<String, String> resultMap = TemplateDataUtil.parseTemplateDataJson(templateDataJson);
+    ImmutableMap<String, String> resultMap = TemplateDataUtil
+        .parseTemplateDataJson(templateDataJson);
 
     assertThat(resultMap)
         .containsExactly(
@@ -48,9 +48,14 @@ public final class TemplateDataUtilTest {
 
   @Test
   public void parseTemplateData_whenMapDataEmpty_success() {
-    String templateDataJson = "{}";
+    ImmutableMap<String, String> resultMap = TemplateDataUtil.parseTemplateDataJson("{}");
 
-    Map<String, String> resultMap = TemplateDataUtil.parseTemplateDataJson(templateDataJson);
+    assertThat(resultMap).isEmpty();
+  }
+
+  @Test
+  public void parseTemplateData_whenEmptyString_success() {
+    ImmutableMap<String, String> resultMap = TemplateDataUtil.parseTemplateDataJson("");
 
     assertThat(resultMap).isEmpty();
   }
@@ -59,7 +64,8 @@ public final class TemplateDataUtilTest {
   public void parseTemplateData_whenStringEmpty_failed() {
     String templateDataJson = "{'mysql_version':''}";
 
-    Map<String, String> resultMap = TemplateDataUtil.parseTemplateDataJson(templateDataJson);
+    ImmutableMap<String, String> resultMap = TemplateDataUtil
+        .parseTemplateDataJson(templateDataJson);
 
     assertThat(resultMap).containsExactly("mysql_version", "");
   }

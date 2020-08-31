@@ -16,51 +16,37 @@
 
 package tsunami.security.scanner.utilities;
 
-import freemarker.template.*;
-import java.io.*;
-import java.util.*;
+import com.google.common.collect.ImmutableMap;
+import freemarker.template.Configuration;
+import freemarker.template.TemplateException;
+import freemarker.template.TemplateExceptionHandler;
+import java.io.File;
+import java.io.IOException;
+import java.io.StringWriter;
 
 /**
- * This class is used for replace ${app_version} and ${password} parameters in template config files.
- * Usage: FreeMarkerUtil.replaceTemplates(Map<String, String> templateDataMap, File configFile);
- * Input:
- *      templateDataMap: Map of template data needs to be substituted, such as {mysql_version=5.6, password=dkkeoij}
- *      configFile: original config file template Output: A new config file after replacement.
- * Deprecated usage: FreeMarkerUtil.replaceTemplates(String version, String password, File configFile);
+ * This class is used for replace template arguments in template config files.
  */
 public final class FreeMarkerUtil {
 
-  static Configuration cfg = new Configuration(Configuration.VERSION_2_3_29);
+  private FreeMarkerUtil() {}
 
-  private FreeMarkerUtil() throws IOException {
-    cfg.setDefaultEncoding("UTF-8");
-    cfg.setTemplateExceptionHandler(TemplateExceptionHandler.RETHROW_HANDLER);
-    cfg.setLogTemplateExceptions(false);
-    cfg.setWrapUncheckedExceptions(true);
-    cfg.setFallbackOnNullLoopVariable(false);
-  }
-
-  public static String replaceTemplates(Map<String, String> templateDataMap, File configFile)
+  /**
+   * Replace template parameters in {@code configFile} with the {@code templateData}.
+   */
+  public static String replaceTemplates(ImmutableMap<String, String> templateData, File configFile)
       throws IOException, TemplateException {
 
-    // Split input configFile into path and file name.
-    String file = configFile.getName();
-    String filePath = configFile.getPath();
-    String path = filePath.substring(0, filePath.lastIndexOf("/"));
+    Configuration config = new Configuration(Configuration.VERSION_2_3_30);
+    config.setDefaultEncoding("UTF-8");
+    config.setTemplateExceptionHandler(TemplateExceptionHandler.RETHROW_HANDLER);
+    config.setLogTemplateExceptions(false);
+    config.setWrapUncheckedExceptions(true);
+    config.setFallbackOnNullLoopVariable(false);
+    config.setDirectoryForTemplateLoading(configFile.getParentFile());
 
-    // Set path for config templates
-    cfg.setDirectoryForTemplateLoading(new File(path));
-
-    // Get the template file.
-    Template temp = cfg.getTemplate(file);
-
-    StringWriter stringWriter = new StringWriter();
-    temp.process(templateDataMap, stringWriter);
-
-    // get the config in String format from the StringWriter
-    String config = stringWriter.toString();
-    System.out.println(config);
-
-    return config;
+    StringWriter outputWriter = new StringWriter();
+    config.getTemplate(configFile.getName()).process(templateData, outputWriter);
+    return outputWriter.toString();
   }
 }

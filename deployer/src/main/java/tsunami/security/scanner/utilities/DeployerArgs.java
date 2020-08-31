@@ -17,28 +17,19 @@
 package tsunami.security.scanner.utilities;
 
 import com.beust.jcommander.Parameter;
+import com.beust.jcommander.Parameters;
 
-public class ApplicationArgs {
-  @Parameter(names = "--app", description = "Application name", required = true)
-  private String name;
+@Parameters(separators = "=")
+public class DeployerArgs {
 
-  @Parameter(names = "--configPath", description = "Path for config files")
-  private String configPath;
+  @Parameter(names = "--app_name", description = "Application name", required = true)
+  public String appName;
+
+  @Parameter(names = "--config_path", description = "Path for config files", required = true)
+  public String configPath;
 
   @Parameter(
-      names = "--templateData",
+      names = "--template_data",
       description = "Template Data needs to be substituted in Json String type.")
-  private String templateData;
-
-  public String getName() {
-    return name;
-  }
-
-  public String getConfigPath() {
-    return configPath;
-  }
-
-  public String getTemplateData() {
-    return templateData;
-  }
+  public String templateData;
 }

@@ -13,17 +13,29 @@ spec:
     app: unauthenticated-jupyter
   type: LoadBalancer
 ---
-apiVersion: v1
-kind: Pod
+apiVersion: apps/v1 # for versions before 1.9.0 use apps/v1beta2
+kind: Deployment
 metadata:
   name: unauthenticated-jupyter
   labels:
     app: unauthenticated-jupyter
 spec:
-  containers:
-    - name: unauthenticated-jupyter
-      image: jupyter/base-notebook
-      ports:
-      - containerPort: 8888
-      command: [ "start-notebook.sh" ]
-      args: [ "--NotebookApp.token=''" ]
+  selector:
+    matchLabels:
+      app: unauthenticated-jupyter
+      tier: frontend
+  strategy:
+    type: Recreate
+  template:
+    metadata:
+      labels:
+        app: unauthenticated-jupyter
+        tier: frontend
+    spec:
+      containers:
+      - name: unauthenticated-jupyter
+        image: jupyter/base-notebook
+        ports:
+        - containerPort: 8888
+        command: [ "start-notebook.sh" ]
+        args: [ "--NotebookApp.token=''" ]

@@ -1,35 +1,33 @@
 plugins {
-    // Apply the java plugin to add support for Java
     id 'java'
-
-    // Apply the application plugin to add support for building a CLI application.
     id 'application'
-
-    id 'com.github.sherter.google-java-format' version '0.9'
+    id 'com.github.johnrengelman.shadow' version '6.0.0'
 }
 
 repositories {
-    // Use jcenter for resolving dependencies.
-    // You can declare any Maven/Ivy/file repository here.
     jcenter()
 }
 
 dependencies {
-    // This dependency is used by the application.
-    implementation 'com.google.guava:guava:29.0-jre'
-    implementation 'io.kubernetes:client-java:8.0.2'
     implementation 'com.beust:jcommander:1.78'
-    implementation 'org.freemarker:freemarker:2.3.30'
     implementation 'com.google.code.gson:gson:2.8.6'
+    implementation 'com.google.guava:guava:29.0-jre'
+    implementation 'com.google.flogger:flogger:0.5.1'
+    implementation 'com.google.flogger:google-extensions:0.5.1'
+    implementation 'com.google.flogger:flogger-system-backend:0.5.1'
+    implementation 'io.kubernetes:client-java:9.0.2'
+    implementation 'org.freemarker:freemarker:2.3.30'
 
-    // Use JUnit test framework
-    testImplementation 'junit:junit:4.13'
-    testImplementation 'com.google.truth:truth:1.0.1'
     testImplementation 'com.google.truth.extensions:truth-java8-extension:0.41'
+    testImplementation 'com.google.truth:truth:1.0.1'
+    testImplementation 'junit:junit:4.13'
     testImplementation 'org.mockito:mockito-core:3.4.0'
 }
 
 application {
-    // Define the main class for the application.
-    mainClassName = 'tsunami.security.scanner.utilities.App'
+    mainClassName = 'tsunami.security.scanner.utilities.Deployer'
+}
+
+shadowJar {
+    classifier = ''
 }

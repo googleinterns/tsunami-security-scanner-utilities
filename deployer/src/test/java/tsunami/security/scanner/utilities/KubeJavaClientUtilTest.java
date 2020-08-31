@@ -16,7 +16,9 @@
 
 package tsunami.security.scanner.utilities;
 
+import static org.junit.Assert.assertThrows;
 import static org.mockito.Mockito.verify;
+
 import io.kubernetes.client.openapi.ApiException;
 import io.kubernetes.client.openapi.apis.AppsV1Api;
 import io.kubernetes.client.openapi.apis.CoreV1Api;
@@ -96,5 +98,32 @@ public final class KubeJavaClientUtilTest {
 
     verify(mockCoreV1Api)
         .createNamespacedPod("default", (V1Pod) Yaml.load(resourceConfig), null, null, null);
+  }
+
+  @Test
+  public void createResources_whenMissingResourceCreator_throws() {
+    String resourceConfig = "apiVersion: apps/v1\n"
+        + "kind: ReplicaSet\n"
+        + "metadata:\n"
+        + "  name: frontend\n"
+        + "  labels:\n"
+        + "    app: guestbook\n"
+        + "    tier: frontend\n"
+        + "spec:\n"
+        + "  replicas: 3\n"
+        + "  selector:\n"
+        + "    matchLabels:\n"
+        + "      tier: frontend\n"
+        + "  template:\n"
+        + "    metadata:\n"
+        + "      labels:\n"
+        + "        tier: frontend\n"
+        + "    spec:\n"
+        + "      containers:\n"
+        + "      - name: php-redis\n"
+        + "        image: gcr.io/google_samples/gb-frontend:v3";
+
+    KubeJavaClientUtil kubeJavaClientUtil = new KubeJavaClientUtil(mockCoreV1Api, mockAppsV1Api);
+    assertThrows(AssertionError.class, () -> kubeJavaClientUtil.createResources(resourceConfig));
   }
 }
