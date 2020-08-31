@@ -5,17 +5,6 @@ plugins {
   id "com.github.johnrengelman.shadow" version "6.0.0"
 }
 
-mainClassName = "com.google.tsunami.security.scanner.utilities.TsunamiTestbedServer"
-
-jar {
-  manifest {
-    attributes "Main-Class": "$mainClassName"
-  }
-  from {
-    configurations.compile.collect { it.isDirectory() ? it : zipTree(it) }
-  }
-}
-
 dependencies {
   implementation project(':api')
   implementation project(':deployer')
@@ -35,4 +24,13 @@ sourceSets {
       srcDirs "../api/build/generated/source/proto/main/grpc"
     }
   }
+}
+
+application {
+  mainClassName = 'com.google.tsunami.security.scanner.utilities.TsunamiTestbedServer'
+}
+
+shadowJar {
+  classifier = ''
+  archiveVersion = ''
 }

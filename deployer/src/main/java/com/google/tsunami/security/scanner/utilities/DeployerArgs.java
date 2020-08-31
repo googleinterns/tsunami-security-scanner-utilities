@@ -14,7 +14,7 @@
  * limitations under the License.
  */
 
-package tsunami.security.scanner.utilities;
+package com.google.tsunami.security.scanner.utilities;
 
 import com.beust.jcommander.Parameter;
 import com.beust.jcommander.Parameters;

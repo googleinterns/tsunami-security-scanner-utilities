@@ -25,7 +25,7 @@ dependencies {
 }
 
 application {
-    mainClassName = 'tsunami.security.scanner.utilities.Deployer'
+    mainClassName = 'com.google.tsunami.security.scanner.utilities.Deployer'
 }
 
 shadowJar {

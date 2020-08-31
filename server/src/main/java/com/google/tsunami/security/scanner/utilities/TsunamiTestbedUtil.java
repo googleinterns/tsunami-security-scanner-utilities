@@ -29,7 +29,6 @@ import io.kubernetes.client.util.Yaml;
 import java.io.File;
 import java.io.IOException;
 import java.util.List;
-import tsunami.security.scanner.utilities.FreeMarkerUtil;
 
 /** The internal implementation of grpc requests. */
 final class TsunamiTestbedUtil {

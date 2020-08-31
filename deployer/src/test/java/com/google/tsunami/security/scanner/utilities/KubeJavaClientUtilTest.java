@@ -14,7 +14,7 @@
  * limitations under the License.
  */
 
-package tsunami.security.scanner.utilities;
+package com.google.tsunami.security.scanner.utilities;
 
 import static org.junit.Assert.assertThrows;
 import static org.mockito.Mockito.verify;

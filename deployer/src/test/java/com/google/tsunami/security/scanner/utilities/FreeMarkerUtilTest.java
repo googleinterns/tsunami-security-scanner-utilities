@@ -14,7 +14,7 @@
  * limitations under the License.
  */
 
-package tsunami.security.scanner.utilities;
+package com.google.tsunami.security.scanner.utilities;
 
 import static com.google.common.truth.Truth.assertThat;
 import static java.nio.charset.StandardCharsets.UTF_8;
