@@ -1,10 +1,9 @@
-FROM openjdk:13-jdk-slim-buster
+FROM openjdk:11-jdk
 
 RUN apt-get update \
     && apt-get -y -q upgrade \
     && rm -rf /var/lib/apt/lists/*
 
-ADD ./server/build/libs/server-1.0-all.jar /testbed/server.jar
 COPY --from=testbed-build:latest /testbed/server/build/libs/server.jar /server/server.jar
 
 EXPOSE 50051
