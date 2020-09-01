@@ -14,10 +14,8 @@ spec:
         - -jar
         - /deployer/deployer.jar
         - --app_name
-        - unauthenticated_jupyter
-        - --config_path
-        - /deployer/application
+        - pre_setup_wordpress
         - --template_data
-        - ""
+        - "{db_password: password}"
       restartPolicy: Never
   backoffLimit: 1

@@ -25,9 +25,6 @@ public class DeployerArgs {
   @Parameter(names = "--app_name", description = "Application name", required = true)
   public String appName;
 
-  @Parameter(names = "--config_path", description = "Path for config files", required = true)
-  public String configPath;
-
   @Parameter(
       names = "--template_data",
       description = "Template Data needs to be substituted in Json String type.")

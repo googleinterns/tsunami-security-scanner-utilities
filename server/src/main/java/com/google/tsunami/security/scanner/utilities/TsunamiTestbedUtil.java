@@ -102,8 +102,6 @@ final class TsunamiTestbedUtil {
                                                 "/deployer/deployer.jar",
                                                 "--app_name",
                                                 applicationName,
-                                                "--config_path",
-                                                "/deployer/application",
                                                 "--template_data",
                                                 Strings.nullToEmpty(templateData)))))));
   }

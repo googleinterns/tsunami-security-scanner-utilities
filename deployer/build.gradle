@@ -10,6 +10,7 @@ repositories {
 
 dependencies {
     implementation 'com.beust:jcommander:1.78'
+    implementation 'io.github.classgraph:classgraph:4.8.65'
     implementation 'com.google.code.gson:gson:2.8.6'
     implementation 'com.google.guava:guava:29.0-jre'
     implementation 'com.google.flogger:flogger:0.5.1'

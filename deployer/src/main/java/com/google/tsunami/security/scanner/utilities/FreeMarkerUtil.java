@@ -29,12 +29,14 @@ import java.io.StringWriter;
  */
 public final class FreeMarkerUtil {
 
-  private FreeMarkerUtil() {}
+  private FreeMarkerUtil() {
+  }
 
   /**
    * Replace template parameters in {@code configFile} with the {@code templateData}.
    */
-  public static String replaceTemplates(ImmutableMap<String, String> templateData, File configFile)
+  public static String replaceTemplates(ImmutableMap<String, String> templateData,
+      String resourcePath)
       throws IOException, TemplateException {
 
     Configuration config = new Configuration(Configuration.VERSION_2_3_30);
@@ -43,10 +45,10 @@ public final class FreeMarkerUtil {
     config.setLogTemplateExceptions(false);
     config.setWrapUncheckedExceptions(true);
     config.setFallbackOnNullLoopVariable(false);
-    config.setDirectoryForTemplateLoading(configFile.getParentFile());
+    config.setClassForTemplateLoading(FreeMarkerUtil.class, "/");
 
     StringWriter outputWriter = new StringWriter();
-    config.getTemplate(configFile.getName()).process(templateData, outputWriter);
+    config.getTemplate(resourcePath).process(templateData, outputWriter);
     return outputWriter.toString();
   }
 }

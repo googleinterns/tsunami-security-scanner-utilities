@@ -20,25 +20,28 @@ import com.beust.jcommander.JCommander;
 import com.google.common.base.Strings;
 import com.google.common.collect.ImmutableMap;
 import com.google.common.flogger.GoogleLogger;
-import com.google.common.io.Files;
 import freemarker.template.TemplateException;
+import io.github.classgraph.ClassGraph;
+import io.github.classgraph.Resource;
+import io.github.classgraph.ResourceList;
+import io.github.classgraph.ScanResult;
 import io.kubernetes.client.openapi.ApiClient;
 import io.kubernetes.client.openapi.ApiException;
 import io.kubernetes.client.openapi.Configuration;
 import io.kubernetes.client.util.Config;
-import java.io.File;
 import java.io.IOException;
-import java.nio.file.Path;
-import java.nio.file.Paths;
+import java.util.regex.Pattern;
 
 public final class Deployer {
 
   private static final GoogleLogger logger = GoogleLogger.forEnclosingClass();
 
   private final KubeJavaClientUtil kubeJavaClientUtil;
+  private final ScanResult scanResult;
 
-  public Deployer(KubeJavaClientUtil kubeJavaClientUtil) {
+  public Deployer(KubeJavaClientUtil kubeJavaClientUtil, ScanResult scanResult) {
     this.kubeJavaClientUtil = kubeJavaClientUtil;
+    this.scanResult = scanResult;
   }
 
   public void run(String[] args) throws ApiException, TemplateException, IOException {
@@ -47,37 +50,31 @@ public final class Deployer {
     JCommander.newBuilder().addObject(deployerArgs).build().parse(args);
 
     String appName = deployerArgs.appName;
-    String configPath = deployerArgs.configPath;
     String templateData = Strings.nullToEmpty(deployerArgs.templateData);
-    logger.atInfo()
-        .log("Deploying '%s' with config path '%s' and template data '%s'", appName, configPath,
-            templateData);
+    logger.atInfo().log("Deploying '%s' with template data '%s'", appName, templateData);
 
-    Path appConfigPath = Paths.get(configPath, appName);
-    if (!appConfigPath.toFile().isDirectory()) {
-      throw new AssertionError(String
-          .format("Application config path '%s' is not a directory.", appConfigPath.toString()));
-    }
-
-    // Transform input template data Json String to Map.
     ImmutableMap<String, String> templateDataMap =
         TemplateDataUtil.parseTemplateDataJson(templateData);
-    // Traverse all files under certain application's config path
-    for (File configFile : Files.fileTraverser().depthFirstPreOrder(appConfigPath.toFile())) {
-      if (configFile.isFile()) {
-        String resourceConfig = FreeMarkerUtil.replaceTemplates(templateDataMap, configFile);
-        kubeJavaClientUtil.createResources(resourceConfig);
-        logger.atInfo().log("Resource file '%s' deployed.", configFile.getAbsolutePath());
-      }
+    ResourceList configs = scanResult.getResourcesMatchingPattern(
+        Pattern.compile(String.format("^application/%s/.*", appName)));
+    if (configs.isEmpty()) {
+      throw new AssertionError(String.format("No configs found for '%s'.", appName));
+    }
+    for (Resource config : scanResult.getResourcesMatchingPattern(
+        Pattern.compile(String.format("^application/%s/.*", appName)))) {
+      String resourceConfig = FreeMarkerUtil.replaceTemplates(templateDataMap, config.getPath());
+      kubeJavaClientUtil.createResources(resourceConfig);
+      logger.atInfo().log("Resource file '%s' deployed.", config.getPath());
     }
   }
 
   public static void main(String[] args) throws IOException, ApiException, TemplateException {
-    // Initialize Kubernetes Java Client Api.
-    ApiClient client = Config.defaultClient();
-    Configuration.setDefaultApiClient(client);
+    try (ScanResult scanResult = new ClassGraph().whitelistPaths("/application").scan()) {
+      ApiClient client = Config.defaultClient();
+      Configuration.setDefaultApiClient(client);
 
-    Deployer deployer = new Deployer(new KubeJavaClientUtil());
-    deployer.run(args);
+      Deployer deployer = new Deployer(new KubeJavaClientUtil(), scanResult);
+      deployer.run(args);
+    }
   }
 }

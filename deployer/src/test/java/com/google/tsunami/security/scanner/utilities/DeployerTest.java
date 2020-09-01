@@ -16,24 +16,21 @@
 
 package com.google.tsunami.security.scanner.utilities;
 
-import static java.nio.charset.StandardCharsets.UTF_8;
 import static org.junit.Assert.assertThrows;
 import static org.mockito.Mockito.*;
 
-import com.beust.jcommander.ParameterException;
-import com.google.common.io.Files;
 import freemarker.template.TemplateException;
+import io.github.classgraph.ClassGraph;
+import io.github.classgraph.ScanResult;
 import io.kubernetes.client.openapi.ApiException;
 import io.kubernetes.client.openapi.apis.AppsV1Api;
 import io.kubernetes.client.openapi.apis.CoreV1Api;
 import io.kubernetes.client.openapi.models.V1Service;
 import io.kubernetes.client.util.Yaml;
-import java.io.File;
 import java.io.IOException;
 import org.junit.Before;
 import org.junit.Rule;
 import org.junit.Test;
-import org.junit.rules.TemporaryFolder;
 import org.junit.runner.RunWith;
 import org.junit.runners.JUnit4;
 import org.mockito.Mock;
@@ -43,82 +40,43 @@ import org.mockito.junit.MockitoRule;
 @RunWith(JUnit4.class)
 public final class DeployerTest {
 
-  private static final String RESOURCE_CONFIG =
-      "apiVersion: v1\n"
-          + "kind: Service\n"
-          + "metadata:\n"
-          + "  name: jupyter\n"
-          + "  labels:\n"
-          + "    app: jupyter\n"
-          + "spec:\n"
-          + "  ports:\n"
-          + "  - port: 80\n"
-          + "    name: http\n"
-          + "    targetPort: 8888\n"
-          + "  selector:\n"
-          + "    app: jupyter\n"
-          + "  type: LoadBalancer";
-  private Deployer classUnderTest;
+  private final ScanResult scanResult = new ClassGraph().whitelistPaths("/application").scan();
+  private Deployer deployer;
 
-  @Rule
-  public MockitoRule mockitoRule = MockitoJUnit.rule();
-  @Rule
-  public TemporaryFolder folder = new TemporaryFolder();
+  @Rule public MockitoRule mockitoRule = MockitoJUnit.rule();
 
-  @Mock
-  CoreV1Api mockCoreV1Api;
-  @Mock
-  AppsV1Api mockAppsV1Api;
+  @Mock CoreV1Api mockCoreV1Api;
+  @Mock AppsV1Api mockAppsV1Api;
 
   @Before
   public void setUp() {
-    this.classUnderTest = new Deployer(new KubeJavaClientUtil(mockCoreV1Api, mockAppsV1Api));
+    this.deployer = new Deployer(new KubeJavaClientUtil(mockCoreV1Api, mockAppsV1Api), scanResult);
   }
 
   @Test
   public void runMain_whenInputValid_success() throws ApiException, IOException, TemplateException {
-    File jupyterFolder = folder.newFolder("jupyter");
-    File configFile = new File(jupyterFolder + "/jupyter.yaml");
-    Files.asCharSink(configFile, UTF_8).write(RESOURCE_CONFIG);
+    String[] args = new String[] {"--app_name", "fake_jupyter"};
 
-    String[] args =
-        new String[]{
-            "--app_name",
-            "jupyter",
-            "--config_path",
-            folder.getRoot().getPath(),
-            "--template_data",
-            "{'jupyter_version':'notebook-6.0.3'}"
-        };
-
-    classUnderTest.run(args);
+    deployer.run(args);
 
     verify(mockCoreV1Api)
         .createNamespacedService(
-            "default", (V1Service) Yaml.load(RESOURCE_CONFIG), null, null, null);
-  }
-
-  @Test
-  public void runMain_whenConfigPathIsMissing_throws() {
-    String[] args =
-        new String[]{"--app_name", "jupyter", "--template_data",
-            "{'jupyter_version':'notebook-6.0.3'}"};
-
-    assertThrows(ParameterException.class, () -> classUnderTest.run(args));
+            "default",
+            (V1Service)
+                Yaml.load(
+                    scanResult
+                        .getResourcesWithPath("application/fake_jupyter/fake_jupyter.yaml")
+                        .get(0)
+                        .getContentAsString()),
+            null,
+            null,
+            null);
   }
 
   @Test
   public void runMain_whenConfigPathDoesNotExist_throws() {
-    String[] args =
-        new String[]{
-            "--app_name",
-            "jupyter",
-            "--config_path",
-            folder.getRoot().getPath(),
-            "--template_data",
-            "{'jupyter_version':'notebook-6.0.3'}"
-        };
+    String[] args = new String[] {"--app_name", "not_exist"};
 
-    assertThrows(AssertionError.class, () -> classUnderTest.run(args));
+    assertThrows(AssertionError.class, () -> deployer.run(args));
   }
 }
