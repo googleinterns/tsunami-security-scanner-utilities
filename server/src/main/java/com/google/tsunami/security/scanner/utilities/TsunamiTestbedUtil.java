@@ -18,129 +18,167 @@ package com.google.tsunami.security.scanner.utilities;
 
 import static com.google.common.collect.ImmutableList.toImmutableList;
 
+import com.google.common.base.Strings;
 import com.google.common.collect.ImmutableList;
-import com.google.common.collect.ImmutableMap;
-import freemarker.template.TemplateException;
+import com.google.common.flogger.GoogleLogger;
+import io.grpc.Status;
+import io.grpc.StatusException;
 import io.kubernetes.client.openapi.ApiException;
 import io.kubernetes.client.openapi.apis.BatchV1Api;
 import io.kubernetes.client.openapi.apis.CoreV1Api;
 import io.kubernetes.client.openapi.models.*;
-import io.kubernetes.client.util.Yaml;
-import java.io.File;
-import java.io.IOException;
-import java.util.List;
+import java.util.Optional;
 
-/** The internal implementation of grpc requests. */
+/**
+ * The internal implementation of grpc requests.
+ */
 final class TsunamiTestbedUtil {
 
-  TsunamiTestbedUtil() {}
+  private static final GoogleLogger logger = GoogleLogger.forEnclosingClass();
 
-  public String createDeployment(
-      String application, String configPath, String templateData, String deployerJobPath)
-      throws IOException, TemplateException, ApiException, InterruptedException {
-    String jobId = "initialID";
+  private final String deployerImage;
 
-    System.out.println("[GRPC REQUEST: CreateDeployment] Creating deployment of : " + application);
-    System.out.println(
-        "app: "
-            + application
-            + " config path: "
-            + configPath
-            + " template data: "
-            + templateData
-            + " job yaml path: "
-            + deployerJobPath);
-
-    BatchV1Api batchV1Api = new BatchV1Api();
-
-    File configFile = new File(deployerJobPath);
-    // Replace template data in deployer yaml file.
-    ImmutableMap<String, String> templateDataMap =
-        ImmutableMap.of("app", application, "configPath", configPath, "templateData", templateData);
-    String resourceConfig = FreeMarkerUtil.replaceTemplates(templateDataMap, configFile);
-
-    // Load deployer job yaml file.
-    Yaml.addModelMap("v1", "Job", V1Job.class);
-    V1Job v1Job = (V1Job) Yaml.load(resourceConfig);
-    System.out.println("Yaml Loaded.");
-
-    // Create deployer job.
-    batchV1Api.createNamespacedJob("default", v1Job, null, null, null);
-    System.out.println("Created Job");
-
-    // Get Unique Id of certain application.
-    V1JobList v1JobList =
-        batchV1Api.listNamespacedJob(
-            "default", null, null, null, null, null, null, null, null, null);
-
-    for (V1Job job : v1JobList.getItems()) {
-      if (job.getMetadata().getName().equals(application)) {
-        jobId = job.getMetadata().getUid();
-        System.out.println("Application " + application + "'s unique id is: " + jobId);
-        break;
-      }
-    }
-
-    return jobId;
+  TsunamiTestbedUtil(String deployerImage) {
+    this.deployerImage = deployerImage;
   }
 
-  public Iterable<String> listApplications() throws ApiException {
-    System.out.println("[GRPC REQUEST: ListApplications] Listing all applications.");
+  public Optional<String> createDeployment(String applicationName, String templateData)
+      throws StatusException {
+    try {
+      logger.atInfo().log(
+          "Creating deployment for '%s' with template data '%s'.", applicationName, templateData);
 
-    CoreV1Api coreV1Api = new CoreV1Api();
+      BatchV1Api batchV1Api = new BatchV1Api();
+      batchV1Api.createNamespacedJob(
+          "default", buildDeployerBatchJob(applicationName, templateData), null, null, null);
+      logger.atInfo().log("Created new deployer job.");
 
-    // List all running services.
-    V1ServiceList v1ServiceList =
-        coreV1Api.listNamespacedService(
-            "default", null, null, null, null, null, null, null, null, null);
-    ImmutableList<String> applications =
-        v1ServiceList.getItems().stream()
-            .map(v1Service -> v1Service.getMetadata().getName())
-            .collect(toImmutableList());
+      // Get Unique Id of certain applicationName.
+      V1JobList v1JobList =
+          batchV1Api.listNamespacedJob(
+              "default", null, null, null, null, null, null, null, null, null);
 
-    System.out.println("Applications list: " + applications);
-
-    return applications;
-  }
-
-  public ServiceEndpoint getApplication(String application) throws ApiException {
-    // Set default ip and port.
-    ServiceEndpoint.Builder serviceEndpointBuilder = ServiceEndpoint.newBuilder();
-
-    System.out.println(
-        "[GRPC REQUEST: GetApplication] Getting ip and port information of : " + application);
-
-    // Get services list.
-    CoreV1Api coreV1Api = new CoreV1Api();
-    V1ServiceList v1ServiceList =
-        coreV1Api.listNamespacedService(
-            "default", null, null, null, null, null, null, null, null, null);
-
-    for (V1Service svc : v1ServiceList.getItems()) {
-      // Find the required service.
-      if (svc.getMetadata().getName().equals(application)) {
-
-        // Get service's ip.
-        try {
-          List<V1LoadBalancerIngress> svcIP = svc.getStatus().getLoadBalancer().getIngress();
-          for (V1LoadBalancerIngress ip : svcIP) {
-            System.out.println("Application " + application + "'s IP: " + ip.getIp());
-            serviceEndpointBuilder.setIp(ip.getIp());
-          }
-        } catch (NullPointerException e) {
-          System.out.println("Caught null pointer exception, no IP address found.");
-          throw e;
-        }
-
-        // Get service's port.
-        List<V1ServicePort> ports = svc.getSpec().getPorts();
-        for (V1ServicePort port : ports) {
-          System.out.println("Application " + application + "'s port: " + port.getPort());
-          serviceEndpointBuilder.setPort(port.getPort().toString());
+      for (V1Job job : v1JobList.getItems()) {
+        if (job.getMetadata().getName().equals(applicationName)) {
+          String jobId = job.getMetadata().getUid();
+          logger.atInfo().log("Found unique id '%s' for application '%s'.", jobId, applicationName);
+          return Optional.of(jobId);
         }
       }
+
+      return Optional.empty();
+    } catch (ApiException e) {
+      throw Status.INTERNAL
+          .withDescription(
+              String.format("Unable to create new deployment for %s.", applicationName))
+          .augmentDescription(e.getMessage())
+          .withCause(e)
+          .asException();
+    }
+  }
+
+  private V1Job buildDeployerBatchJob(String applicationName, String templateData) {
+    return new V1Job()
+        .apiVersion("batch/v1")
+        .kind("Job")
+        .metadata(
+            new V1ObjectMeta().generateName(String.format("testbed-deployer-%s-", applicationName)))
+        .spec(
+            new V1JobSpec()
+                .backoffLimit(1)
+                .template(
+                    new V1PodTemplateSpec()
+                        .spec(
+                            new V1PodSpec()
+                                .restartPolicy("Never")
+                                .addContainersItem(
+                                    new V1Container()
+                                        .name("testbed-deployer")
+                                        .image(deployerImage)
+                                        .addCommandItem("java")
+                                        .args(
+                                            ImmutableList.of(
+                                                "-jar",
+                                                "/deployer/deployer.jar",
+                                                "--app_name",
+                                                applicationName,
+                                                "--config_path",
+                                                "/deployer/application",
+                                                "--template_data",
+                                                Strings.nullToEmpty(templateData)))))));
+  }
+
+  public Iterable<String> listApplications() throws StatusException {
+    try {
+      logger.atInfo().log("Listing all applications.");
+
+      // List all running services.
+      V1ServiceList v1ServiceList =
+          new CoreV1Api()
+              .listNamespacedService("default", null, null, null, null, null, null, null, null,
+                  null);
+      ImmutableList<String> applications =
+          v1ServiceList.getItems().stream()
+              .map(v1Service -> v1Service.getMetadata().getName())
+              .collect(toImmutableList());
+
+      logger.atInfo().log("Applications list: " + applications);
+      return applications;
+    } catch (ApiException e) {
+      throw Status.INTERNAL
+          .withDescription("Unable to list applications.")
+          .augmentDescription(e.getMessage())
+          .withCause(e)
+          .asException();
+    }
+  }
+
+  public ServiceEndpoint getApplication(String applicationName) throws StatusException {
+    try {
+      logger.atInfo().log("Getting application info for application '%s'.", applicationName);
+
+      // Get services list.
+      V1ServiceList v1ServiceList =
+          new CoreV1Api()
+              .listNamespacedService(
+                  "default", null, null, null, null, null, null, null, null, null);
+
+      for (V1Service svc : v1ServiceList.getItems()) {
+        if (svc.getMetadata().getName().equals(applicationName)) {
+          String ip =
+              Optional.ofNullable(svc.getStatus())
+                  .map(V1ServiceStatus::getLoadBalancer)
+                  .map(V1LoadBalancerStatus::getIngress)
+                  .flatMap(
+                      loadBalancers ->
+                          loadBalancers.stream().map(V1LoadBalancerIngress::getIp).findFirst())
+                  .orElse("UNKNOWN");
+          String port =
+              Optional.ofNullable(svc.getSpec())
+                  .map(V1ServiceSpec::getPorts)
+                  .flatMap(
+                      ports ->
+                          ports.stream()
+                              .map(V1ServicePort::getPort)
+                              .map(String::valueOf)
+                              .findFirst())
+                  .orElse("UNKNOWN");
+          logger.atInfo().log("Application '%s' running on '%s:%s'.", applicationName, ip, port);
+          return ServiceEndpoint.newBuilder().setIp(ip).setPort(port).build();
+        }
+      }
+    } catch (ApiException e) {
+      throw Status.INTERNAL
+          .withDescription(
+              String.format("Unable to fetch application info for '%s'.", applicationName))
+          .augmentDescription(e.getMessage())
+          .withCause(e)
+          .asException();
     }
 
-    return serviceEndpointBuilder.build();
+    throw Status.NOT_FOUND
+        .withDescription(
+            String.format("Application with name '%s' not found on the cluster.", applicationName))
+        .asException();
   }
 }

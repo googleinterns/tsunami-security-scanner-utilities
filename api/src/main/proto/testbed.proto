@@ -49,12 +49,8 @@ service TsunamiTestbed {
 message CreateDeploymentRequest {
   // Application's name.
   string application = 1;
-  // Path of config files.
-  string config_path = 2;
   // Template data such as version and password in json format.
-  string template_data = 3;
-  // Path of deployer Job. Example: ${projectDir}/deployer-job.yaml
-  string deployer_job_path = 4;
+  string template_data = 2;
 }
 
 message CreateDeploymentResponse {

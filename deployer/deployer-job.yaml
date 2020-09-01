@@ -14,10 +14,10 @@ spec:
         - -jar
         - /deployer/deployer.jar
         - --app_name
-        - ${app_name}
+        - unauthenticated_jupyter
         - --config_path
         - /deployer/application
         - --template_data
-        - ${template_data}
+        - ""
       restartPolicy: Never
   backoffLimit: 1

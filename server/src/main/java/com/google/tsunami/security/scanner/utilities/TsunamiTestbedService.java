@@ -16,11 +16,21 @@
 
 package com.google.tsunami.security.scanner.utilities;
 
+import com.google.common.flogger.GoogleLogger;
 import com.google.protobuf.Empty;
+import io.grpc.Status;
+import io.grpc.StatusException;
+import io.grpc.StatusRuntimeException;
 import io.grpc.stub.StreamObserver;
+import io.kubernetes.client.openapi.ApiException;
 
-/** Implements the Tsunami Testbed GRPC service. */
+/**
+ * Implements the Tsunami Testbed GRPC service.
+ */
 public final class TsunamiTestbedService extends TsunamiTestbedGrpc.TsunamiTestbedImplBase {
+
+  private static final GoogleLogger logger = GoogleLogger.forEnclosingClass();
+
   private final TsunamiTestbedUtil util;
 
   public TsunamiTestbedService(TsunamiTestbedUtil util) {
@@ -31,19 +41,19 @@ public final class TsunamiTestbedService extends TsunamiTestbedGrpc.TsunamiTestb
   public void createDeployment(
       CreateDeploymentRequest request, StreamObserver<CreateDeploymentResponse> responseObserver) {
     try {
+      logger.atInfo().log("[CreateDeployment] Received request '%s'.", request);
       CreateDeploymentResponse response =
           CreateDeploymentResponse.newBuilder()
               .setJobId(
-                  util.createDeployment(
-                      request.getApplication(),
-                      request.getConfigPath(),
-                      request.getTemplateData(),
-                      request.getDeployerJobPath()))
+                  util.createDeployment(request.getApplication(), request.getTemplateData())
+                      .orElse(""))
               .build();
       responseObserver.onNext(response);
       responseObserver.onCompleted();
-    } catch (Throwable t) {
-      responseObserver.onError(t);
+    } catch (StatusException e) {
+      logger.atSevere().withCause(e).log(
+          "Failed creating new deployment for '%s'.", request.getApplication());
+      responseObserver.onError(e);
     }
   }
 
@@ -51,12 +61,14 @@ public final class TsunamiTestbedService extends TsunamiTestbedGrpc.TsunamiTestb
   public void listApplications(
       Empty request, StreamObserver<ListApplicationsResponse> responseObserver) {
     try {
+      logger.atInfo().log("[ListApplications] Received request '%s'.", request);
       ListApplicationsResponse response =
           ListApplicationsResponse.newBuilder().addAllApplications(util.listApplications()).build();
       responseObserver.onNext(response);
       responseObserver.onCompleted();
-    } catch (Throwable t) {
-      responseObserver.onError(t);
+    } catch (StatusException e) {
+      logger.atSevere().withCause(e).log("Failed listing applications.");
+      responseObserver.onError(e);
     }
   }
 
@@ -64,14 +76,17 @@ public final class TsunamiTestbedService extends TsunamiTestbedGrpc.TsunamiTestb
   public void getApplication(
       GetApplicationRequest request, StreamObserver<GetApplicationResponse> responseObserver) {
     try {
+      logger.atInfo().log("[GetApplication] Received request '%s'.", request);
       GetApplicationResponse response =
           GetApplicationResponse.newBuilder()
               .setServiceEndpoint(util.getApplication(request.getApplication()))
               .build();
       responseObserver.onNext(response);
       responseObserver.onCompleted();
-    } catch (Throwable t) {
-      responseObserver.onError(t);
+    } catch (StatusException e) {
+      logger.atSevere().withCause(e)
+          .log("Failed fetching application info for '%s'.", request.getApplication());
+      responseObserver.onError(e);
     }
   }
 }

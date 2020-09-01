@@ -20,6 +20,7 @@ import com.beust.jcommander.JCommander;
 import com.beust.jcommander.Parameter;
 import com.beust.jcommander.ParameterException;
 import com.beust.jcommander.Parameters;
+import com.google.common.flogger.GoogleLogger;
 import io.grpc.Server;
 import io.grpc.ServerBuilder;
 import io.kubernetes.client.openapi.ApiClient;
@@ -28,77 +29,54 @@ import io.kubernetes.client.util.Config;
 import java.io.IOException;
 import java.util.concurrent.TimeUnit;
 
-/** Builds and starts a GRPC-based Tsunami Testbed server. */
+/**
+ * Builds and starts a GRPC-based Tsunami Testbed server.
+ */
 public final class TsunamiTestbedServer {
 
+  private static final GoogleLogger logger = GoogleLogger.forEnclosingClass();
   private static final int DEFAULT_PORT = 8000;
 
-  @Parameters
-  private static class TsunamiTestbedServerArgs {
-    @Parameter(
-        names = "--port",
-        description = "The port on which the server listens.",
-        validateWith = ValidPort.class)
-    public int port = DEFAULT_PORT;
+  private final Server server;
+  private final int port;
 
-    @Parameter(
-        names = {"--help", "-h"},
-        description = "Print parameters and description.",
-        help = true)
-    public boolean help = false;
+  TsunamiTestbedServer(int port, String deployerImage) {
+    this.port = port;
+    this.server = ServerBuilder.forPort(port)
+        .addService(new TsunamiTestbedService(new TsunamiTestbedUtil(deployerImage))).build();
   }
 
   public static void main(String[] args) throws Exception {
     TsunamiTestbedServerArgs serverArgs = new TsunamiTestbedServerArgs();
     JCommander jCommander = JCommander.newBuilder().addObject(serverArgs).build();
-    try {
-      jCommander.parse(args);
-      if (serverArgs.help) {
-        jCommander.usage();
-        return;
-      }
-    } catch (ParameterException e) {
-      System.err.println("Invalid command line: " + e.getMessage());
+    jCommander.parse(args);
+    if (serverArgs.help) {
+      jCommander.usage();
       return;
     }
 
-    int port = serverArgs.port;
-
     ApiClient client = Config.defaultClient();
     Configuration.setDefaultApiClient(client);
-    System.out.println("Initialized Kubernetes Api Client.");
+    logger.atInfo().log("Initialized Kubernetes Api Client.");
 
-    final TsunamiTestbedUtil util = new TsunamiTestbedUtil();
-    final TsunamiTestbedServer server = new TsunamiTestbedServer();
-    Runtime.getRuntime()
-        .addShutdownHook(
-            new Thread() {
-              @Override
-              public void run() {
-                try {
-                  System.out.println("Shutting down");
-                  server.stop();
-                } catch (Exception e) {
-                  e.printStackTrace();
-                }
-              }
-            });
-    server.start(port, util);
-    System.out.format("Testbed service listening on %d\n", port);
+    TsunamiTestbedServer server =
+        new TsunamiTestbedServer(serverArgs.port, serverArgs.deployerImage);
+    server.start();
     server.blockUntilShutdown();
   }
 
-  private Server server;
-
-  private void start(int port, TsunamiTestbedUtil util) throws IOException {
-    server =
-        ServerBuilder.forPort(port).addService(new TsunamiTestbedService(util)).build().start();
+  private void start() throws IOException {
+    server.start();
+    logger.atInfo().log("Testbed service listening on %d.", port);
+    Runtime.getRuntime().addShutdownHook(new Thread(this::stop));
   }
 
-  private void stop() throws Exception {
-    server.shutdownNow();
-    if (!server.awaitTermination(5, TimeUnit.SECONDS)) {
-      System.err.println("Timed out waiting for server shutdown");
+  private void stop() {
+    try {
+      logger.atInfo().log("Server shutting down.");
+      server.shutdown().awaitTermination(30, TimeUnit.SECONDS);
+    } catch (InterruptedException e) {
+      logger.atSevere().withCause(e).log("Server interrrupted while shutting down.");
     }
   }
 
@@ -106,5 +84,26 @@ public final class TsunamiTestbedServer {
     if (server != null) {
       server.awaitTermination();
     }
+  }
+
+  @Parameters(separators = "=")
+  private static final class TsunamiTestbedServerArgs {
+
+    @Parameter(
+        names = "--port",
+        description = "The port on which the server listens.",
+        validateWith = ValidPort.class)
+    public int port = DEFAULT_PORT;
+
+    @Parameter(
+        names = "--deployer_image",
+        description = "The name of the appliation deployer image", required = true)
+    public String deployerImage;
+
+    @Parameter(
+        names = {"--help", "-h"},
+        description = "Print parameters and description.",
+        help = true)
+    public boolean help = false;
   }
 }
