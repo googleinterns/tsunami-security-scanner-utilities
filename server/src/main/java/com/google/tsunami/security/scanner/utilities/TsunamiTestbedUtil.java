@@ -20,7 +20,9 @@ import static com.google.common.collect.ImmutableList.toImmutableList;
 
 import com.google.common.base.Strings;
 import com.google.common.collect.ImmutableList;
+import com.google.common.collect.ImmutableMap;
 import com.google.common.flogger.GoogleLogger;
+import com.google.common.io.BaseEncoding;
 import io.grpc.Status;
 import io.grpc.StatusException;
 import io.kubernetes.client.openapi.ApiException;
@@ -28,6 +30,7 @@ import io.kubernetes.client.openapi.apis.BatchV1Api;
 import io.kubernetes.client.openapi.apis.CoreV1Api;
 import io.kubernetes.client.openapi.models.*;
 import java.util.Optional;
+import java.util.UUID;
 
 /**
  * The internal implementation of grpc requests.
@@ -42,31 +45,29 @@ final class TsunamiTestbedUtil {
     this.deployerImage = deployerImage;
   }
 
-  public Optional<String> createDeployment(String applicationName, String templateData)
+  public V1Job createDeployment(String applicationName, String templateData)
       throws StatusException {
     try {
       logger.atInfo().log(
           "Creating deployment for '%s' with template data '%s'.", applicationName, templateData);
 
       BatchV1Api batchV1Api = new BatchV1Api();
-      batchV1Api.createNamespacedJob(
-          "default", buildDeployerBatchJob(applicationName, templateData), null, null, null);
-      logger.atInfo().log("Created new deployer job.");
-
-      // Get Unique Id of certain applicationName.
-      V1JobList v1JobList =
-          batchV1Api.listNamespacedJob(
-              "default", null, null, null, null, null, null, null, null, null);
-
-      for (V1Job job : v1JobList.getItems()) {
-        if (job.getMetadata().getName().equals(applicationName)) {
-          String jobId = job.getMetadata().getUid();
-          logger.atInfo().log("Found unique id '%s' for application '%s'.", jobId, applicationName);
-          return Optional.of(jobId);
-        }
-      }
-
-      return Optional.empty();
+      V1Job createdJob =
+          batchV1Api.createNamespacedJob(
+              "default",
+              buildDeployerBatchJob(applicationName, templateData),
+              null,
+              null,
+              null);
+      logger.atInfo().log(
+          "Created new deployer job '%s' with id '%s'.",
+          Optional.ofNullable(createdJob.getMetadata())
+              .map(V1ObjectMeta::getName)
+              .orElse("UNKNOWN_JOB_NAME"),
+          Optional.ofNullable(createdJob.getMetadata())
+              .map(V1ObjectMeta::getUid)
+              .orElse("UNKNOWN_JOB_ID"));
+      return createdJob;
     } catch (ApiException e) {
       throw Status.INTERNAL
           .withDescription(
@@ -81,8 +82,7 @@ final class TsunamiTestbedUtil {
     return new V1Job()
         .apiVersion("batch/v1")
         .kind("Job")
-        .metadata(
-            new V1ObjectMeta().generateName(String.format("testbed-deployer-%s-", applicationName)))
+        .metadata(new V1ObjectMeta().generateName("testbed-deployer-"))
         .spec(
             new V1JobSpec()
                 .backoffLimit(1)

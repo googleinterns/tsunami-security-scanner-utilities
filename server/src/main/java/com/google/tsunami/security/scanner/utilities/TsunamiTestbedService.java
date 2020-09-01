@@ -23,6 +23,9 @@ import io.grpc.StatusException;
 import io.grpc.StatusRuntimeException;
 import io.grpc.stub.StreamObserver;
 import io.kubernetes.client.openapi.ApiException;
+import io.kubernetes.client.openapi.models.V1Job;
+import io.kubernetes.client.openapi.models.V1ObjectMeta;
+import java.util.Optional;
 
 /**
  * Implements the Tsunami Testbed GRPC service.
@@ -42,11 +45,17 @@ public final class TsunamiTestbedService extends TsunamiTestbedGrpc.TsunamiTestb
       CreateDeploymentRequest request, StreamObserver<CreateDeploymentResponse> responseObserver) {
     try {
       logger.atInfo().log("[CreateDeployment] Received request '%s'.", request);
+      V1Job createdJob = util.createDeployment(request.getApplication(), request.getTemplateData());
       CreateDeploymentResponse response =
           CreateDeploymentResponse.newBuilder()
               .setJobId(
-                  util.createDeployment(request.getApplication(), request.getTemplateData())
-                      .orElse(""))
+                  Optional.ofNullable(createdJob.getMetadata())
+                      .map(V1ObjectMeta::getUid)
+                      .orElse("UNKNOWN_JOB_ID"))
+              .setJobName(
+                  Optional.ofNullable(createdJob.getMetadata())
+                      .map(V1ObjectMeta::getName)
+                      .orElse("UNKNOWN_JOB_NAME"))
               .build();
       responseObserver.onNext(response);
       responseObserver.onCompleted();
