@@ -1,15 +1,15 @@
 apiVersion: v1
 kind: Service
 metadata:
-  name: pre-install-wordpress-mysql
+  name: pre-setup-wp-mysql
   labels:
-    app: pre-install-wordpress
+    app: pre-setup-wp
 spec:
   ports:
     - port: 3306
   selector:
-    app: pre-install-wordpress
-    tier: mysql
+    app: pre-setup-wp
+    tier: pre-setup-wp-mysql
   clusterIP: None
 ---
 apiVersion: v1
@@ -17,7 +17,7 @@ kind: PersistentVolumeClaim
 metadata:
   name: mysql-pv-claim
   labels:
-    app: pre-install-wordpress
+    app: pre-setup-wp
 spec:
   accessModes:
     - ReadWriteOnce
@@ -28,35 +28,34 @@ spec:
 apiVersion: apps/v1 # for versions before 1.9.0 use apps/v1beta2
 kind: Deployment
 metadata:
-  name: pre-install-wordpress-mysql
+  name: pre-setup-wp-mysql
   labels:
-    app: pre-install-wordpress
+    app: pre-setup-wp
 spec:
   selector:
     matchLabels:
-      app: pre-install-wordpress
-      tier: mysql
+      app: pre-setup-wp
+      tier: pre-setup-wp-mysql
   strategy:
     type: Recreate
   template:
     metadata:
       labels:
-        app: pre-install-wordpress
-        tier: mysql
+        app: pre-setup-wp
+        tier: pre-setup-wp-mysql
     spec:
       containers:
       - image: mysql:5.6
-        name: mysql
+        name: pre-setup-wp-mysql
         env:
         - name: MYSQL_ROOT_PASSWORD
           value: ${db_password}
         ports:
         - containerPort: 3306
-          name: mysql
         volumeMounts:
-        - name: mysql-persistent-storage
+        - name: pre-setup-wp-mysql-persistent-storage
           mountPath: /var/lib/mysql
       volumes:
-      - name: mysql-persistent-storage
+      - name: pre-setup-wp-mysql-persistent-storage
         persistentVolumeClaim:
           claimName: mysql-pv-claim
