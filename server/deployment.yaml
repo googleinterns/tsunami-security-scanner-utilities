@@ -40,6 +40,6 @@ spec:
         ports:
           - containerPort: 9000
       - name: testbed-grpc-server
-        image: gcr.io/GCLOUD_PROJECT/testbed-grpc-server:1.0
+        image: gcr.io/$$GCP_PROJECT_ID$$/testbed-grpc-server:1.0
         ports:
           - containerPort: 50051

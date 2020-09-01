@@ -6,7 +6,6 @@ plugins {
 
 dependencies {
   implementation project(':api')
-  implementation project(':deployer')
   implementation 'com.beust:jcommander:1.78'
   implementation 'com.google.code.gson:gson:2.8.6'
   implementation 'com.google.flogger:flogger:0.5.1'

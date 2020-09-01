@@ -5,7 +5,7 @@ config_version: 3
 # Name of the service configuration.
 # NOTE: Replace ${MY_PROJECT_ID} with your gcloud project id.
 #
-name: testbed.endpoints.MY_PROJECT_ID.cloud.goog
+name: testbed.endpoints.$$GCP_PROJECT_ID$$.cloud.goog
 
 #
 # API title to appear in the user interface (Google Cloud Console).
