@@ -17,7 +17,7 @@ spec:
 apiVersion: apps/v1
 kind: Deployment
 metadata:
-  name: testbed-grpc
+  name: testbed-api
 spec:
   replicas: 1
   selector:
@@ -39,7 +39,7 @@ spec:
         ]
         ports:
           - containerPort: 9000
-      - name: testbed-grpc-server
+      - name: testbed-api-server
         image: gcr.io/$$GCP_PROJECT_ID$$/testbed-server:latest
         ports:
           - containerPort: 50051
