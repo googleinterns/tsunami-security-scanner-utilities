@@ -19,17 +19,27 @@ This project aims to provide useful utilities for Tsunami Security Scanner.
 1.  Setup a GCP project and a GKE cluster. Take a note of the GCP project name
     as well as the GKE cluster name.
     
-    NOTE: Make sure your GKE cluster has access to all Cloud APIs.
+    NOTE: For simplicity reasons, make sure your GKE cluster has access to all
+    Cloud APIs. You can do so via the Cloud Console when you create the GKE
+    cluster, under `Node Pool > Security`. Or enable
+    [all scopes](https://cloud.google.com/sdk/gcloud/reference/container/clusters/create#--scopes)
+    for the `--scopes` option if you use `gcloud` sdk.
 1.  [Generate an API key](https://console.cloud.google.com/apis/credentials)
     which will be used later for RPC client.
-1.  Open a terminal, set the following environment variable:
+1.  Open a terminal, set the following environment variables:
     ```shell script
     export GCP_PROJECT_ID=[replace with project id]
     export GKE_CLUSTER_ZONE=[replace with cluster zone]
     export GKE_CLUSTER_NAME=[replace with cluster name]
     ```
-1.  Authenticate the `gcloud` tool: `gcloud auth login`
-1.  Set the `gcloud` project: `gcloud config set project "${GCP_PROJECT_ID}"`
+1.  Authenticate the `gcloud` tool:
+    ```
+    gcloud auth login
+    ```
+1.  Set the `gcloud` project:
+    ```
+    gcloud config set project "${GCP_PROJECT_ID}"
+    ```
 1.  Fetch credentials for the GKE cluster:
     ```
     gcloud container clusters get-credentials "${GKE_CLUSTER_NAME}" --zone="${GKE_CLUSTER_ZONE}"
@@ -43,10 +53,16 @@ This project aims to provide useful utilities for Tsunami Security Scanner.
     ```
     git clone https://github.com/googleinterns/tsunami-security-scanner-utilities && cd tsunami-security-scanner-utilities
     ```
-1.  Checkout the cleanup branch: `git checkout cleanup`
+1.  Checkout the cleanup branch:
+    ```
+    git checkout cleanup
+    ```
 1.  Execute the `bootstrap_cluster.sh` script:
-    `bash scripts/bootstrap_cluster.sh`. The bootstrap process would take around
-    10 mins. The bootstrap script performs the following tasks.
+    ```
+    bash scripts/bootstrap_cluster.sh
+    ```
+    The bootstrap process would take around 10 minutes. The bootstrap script
+    performs the following tasks.
     1. Instantiates some deployment template files with the `GCP_PROJECT_ID`
        variable.
     1. Builds the docker images for the application deployer and the API server,
@@ -59,9 +75,9 @@ This project aims to provide useful utilities for Tsunami Security Scanner.
 
 #### Option 1. Using the API
 
-The bootstrap script will build a client JAR file at `client/build/libs`
-directory, use the following command to call the deployment API and deploy an
-application to the GKE cluster:
+The bootstrap script will build a client JAR file located at `client/build/libs`
+directory. Use the following command to call the deployment API and deploy an
+application on the GKE cluster:
 
 ```shell script
 # Deploys an unauthenticated Jupyter notebook.
@@ -117,7 +133,8 @@ cd deployer && kubectl apply -f deployer-job.yaml
 
 1. Create a new directory in `deployer/src/main/resources/application` for the
    application or vulnerabilities. All the deployment configs goes into this
-   directory.
+   directory. The same directory name will be used in the `--app_name` deployer
+   argument to identify the application during deployment.
 
 1. The testbed deployer uses the k8s config for specifying the deployment logic.
    Usually your deployment config should look similar to the following example:
