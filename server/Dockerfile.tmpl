@@ -8,4 +8,4 @@ COPY --from=testbed-build:latest /testbed/server/build/libs/server.jar /server/s
 
 EXPOSE 50051
 
-ENTRYPOINT ["java", "-jar", "/server/server.jar", "--port=50051", "--deployer_image=gcr.io/$$GCP_PROJECT_ID$$/testbed-deployer"]
+ENTRYPOINT ["java", "-jar", "/server/server.jar", "--port=50051", "--deployer_image=gcr.io/%%GCP_PROJECT_ID%%/testbed-deployer"]

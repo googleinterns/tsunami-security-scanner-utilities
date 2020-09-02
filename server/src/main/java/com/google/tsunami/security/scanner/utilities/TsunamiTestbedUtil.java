@@ -20,9 +20,7 @@ import static com.google.common.collect.ImmutableList.toImmutableList;
 
 import com.google.common.base.Strings;
 import com.google.common.collect.ImmutableList;
-import com.google.common.collect.ImmutableMap;
 import com.google.common.flogger.GoogleLogger;
-import com.google.common.io.BaseEncoding;
 import io.grpc.Status;
 import io.grpc.StatusException;
 import io.kubernetes.client.openapi.ApiException;
@@ -30,11 +28,8 @@ import io.kubernetes.client.openapi.apis.BatchV1Api;
 import io.kubernetes.client.openapi.apis.CoreV1Api;
 import io.kubernetes.client.openapi.models.*;
 import java.util.Optional;
-import java.util.UUID;
 
-/**
- * The internal implementation of grpc requests.
- */
+/** The internal implementation of grpc requests. */
 final class TsunamiTestbedUtil {
 
   private static final GoogleLogger logger = GoogleLogger.forEnclosingClass();
@@ -54,11 +49,7 @@ final class TsunamiTestbedUtil {
       BatchV1Api batchV1Api = new BatchV1Api();
       V1Job createdJob =
           batchV1Api.createNamespacedJob(
-              "default",
-              buildDeployerBatchJob(applicationName, templateData),
-              null,
-              null,
-              null);
+              "default", buildDeployerBatchJob(applicationName, templateData), null, null, null);
       logger.atInfo().log(
           "Created new deployer job '%s' with id '%s'.",
           Optional.ofNullable(createdJob.getMetadata())
@@ -72,7 +63,9 @@ final class TsunamiTestbedUtil {
       throw Status.INTERNAL
           .withDescription(
               String.format("Unable to create new deployment for %s.", applicationName))
-          .augmentDescription(e.getMessage())
+          .augmentDescription("Exception message: " + e.getMessage())
+          .augmentDescription("Code: " + e.getCode())
+          .augmentDescription("Body: " + e.getResponseBody())
           .withCause(e)
           .asException();
     }
@@ -82,7 +75,10 @@ final class TsunamiTestbedUtil {
     return new V1Job()
         .apiVersion("batch/v1")
         .kind("Job")
-        .metadata(new V1ObjectMeta().generateName("testbed-deployer-"))
+        .metadata(
+            new V1ObjectMeta()
+                .generateName("testbed-deployer-")
+                .putLabelsItem("app-name", applicationName))
         .spec(
             new V1JobSpec()
                 .backoffLimit(1)
@@ -113,8 +109,8 @@ final class TsunamiTestbedUtil {
       // List all running services.
       V1ServiceList v1ServiceList =
           new CoreV1Api()
-              .listNamespacedService("default", null, null, null, null, null, null, null, null,
-                  null);
+              .listNamespacedService(
+                  "default", null, null, null, null, null, null, null, null, null);
       ImmutableList<String> applications =
           v1ServiceList.getItems().stream()
               .map(v1Service -> v1Service.getMetadata().getName())
@@ -125,7 +121,9 @@ final class TsunamiTestbedUtil {
     } catch (ApiException e) {
       throw Status.INTERNAL
           .withDescription("Unable to list applications.")
-          .augmentDescription(e.getMessage())
+          .augmentDescription("Exception message: " + e.getMessage())
+          .augmentDescription("Code: " + e.getCode())
+          .augmentDescription("Body: " + e.getResponseBody())
           .withCause(e)
           .asException();
     }
@@ -169,7 +167,9 @@ final class TsunamiTestbedUtil {
       throw Status.INTERNAL
           .withDescription(
               String.format("Unable to fetch application info for '%s'.", applicationName))
-          .augmentDescription(e.getMessage())
+          .augmentDescription("Exception message: " + e.getMessage())
+          .augmentDescription("Code: " + e.getCode())
+          .augmentDescription("Body: " + e.getResponseBody())
           .withCause(e)
           .asException();
     }
