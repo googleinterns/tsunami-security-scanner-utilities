@@ -100,7 +100,7 @@ java -jar client/build/libs/client.jar \
     --api_key=[API key generated at prerequisite step] \
     --operation=createDeployment \
     --app_name=pre_setup_wordpress \
-    --template_data="{db_password: password}"
+    --template_data="{\"db_password\": \"password\"}"
 # Fetch the IP and port of the wordpress service.
 java -jar client/build/libs/client.jar \
     --tsunami_testbed=[testbed master service IP and port] \

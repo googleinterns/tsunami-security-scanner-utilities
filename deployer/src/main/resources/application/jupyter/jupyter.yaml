@@ -37,3 +37,5 @@ spec:
         image: jupyter/base-notebook:${jupyter_version}
         ports:
         - containerPort: 8888
+        command: [ "start-notebook.sh" ]
+        args: [ "--NotebookApp.token='${notebook_token}'" ]

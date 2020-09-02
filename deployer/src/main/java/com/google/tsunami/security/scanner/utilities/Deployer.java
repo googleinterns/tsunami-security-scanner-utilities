@@ -56,12 +56,11 @@ public final class Deployer {
     ImmutableMap<String, String> templateDataMap =
         TemplateDataUtil.parseTemplateDataJson(templateData);
     ResourceList configs = scanResult.getResourcesMatchingPattern(
-        Pattern.compile(String.format("^application/%s/.*", appName)));
+        Pattern.compile(String.format("^application/%s/.*\\.yaml", appName)));
     if (configs.isEmpty()) {
       throw new AssertionError(String.format("No configs found for '%s'.", appName));
     }
-    for (Resource config : scanResult.getResourcesMatchingPattern(
-        Pattern.compile(String.format("^application/%s/.*", appName)))) {
+    for (Resource config : configs) {
       String resourceConfig = FreeMarkerUtil.replaceTemplates(templateDataMap, config.getPath());
       kubeJavaClientUtil.createResources(resourceConfig);
       logger.atInfo().log("Resource file '%s' deployed.", config.getPath());
