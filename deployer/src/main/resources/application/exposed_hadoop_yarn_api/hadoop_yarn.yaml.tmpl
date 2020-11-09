@@ -1,0 +1,39 @@
+apiVersion: v1
+kind: Service
+metadata:
+  name: exposed-hadoop-yarn-api
+  labels:
+    app: exposed-hadoop-yarn-api
+spec:
+  ports:
+  - port: 8088
+    name: http
+    targetPort: 8088
+  selector:
+    app: exposed-hadoop-yarn-api
+  type: LoadBalancer
+---
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: exposed-hadoop-yarn-api
+  labels:
+    app: exposed-hadoop-yarn-api
+spec:
+  selector:
+    matchLabels:
+      app: exposed-hadoop-yarn-api
+      tier: frontend
+  strategy:
+    type: Recreate
+  template:
+    metadata:
+      labels:
+        app: exposed-hadoop-yarn-api
+        tier: frontend
+    spec:
+      containers:
+      - name: exposed-hadoop-yarn-api
+        image: gcr.io/%%GCP_PROJECT_ID%%/testbed-hadoop:${hadoop_version}
+        ports:
+        - containerPort: 8088

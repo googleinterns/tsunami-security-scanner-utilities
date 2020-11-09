@@ -25,6 +25,7 @@ printf "${bold}${yellow}Setting up testbed for ${GKE_CLUSTER_NAME} on project ${
 
 bash "${SCRIPT_PATH}/update_template.sh"
 bash "${SCRIPT_PATH}/build_docker_image.sh"
+bash "${SCRIPT_PATH}/build_app_images.sh"
 bash "${SCRIPT_PATH}/setup_endpoint_service.sh"
 bash "${SCRIPT_PATH}/deploy_api_server.sh"
 

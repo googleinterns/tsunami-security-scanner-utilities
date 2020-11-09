@@ -18,7 +18,6 @@ package com.google.tsunami.security.scanner.utilities;
 
 import com.beust.jcommander.JCommander;
 import com.beust.jcommander.Parameter;
-import com.beust.jcommander.ParameterException;
 import com.beust.jcommander.Parameters;
 import com.google.common.base.Strings;
 import com.google.common.flogger.GoogleLogger;
@@ -32,7 +31,6 @@ import io.grpc.ForwardingClientCall;
 import io.grpc.ManagedChannelBuilder;
 import io.grpc.Metadata;
 import io.grpc.MethodDescriptor;
-import java.util.logging.Logger;
 
 /** A client application which calls the Testbed API over gRPC. */
 public final class TsunamiTestbedClient {
