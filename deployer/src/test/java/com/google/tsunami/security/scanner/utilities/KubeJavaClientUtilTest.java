@@ -21,6 +21,7 @@ import static org.mockito.Mockito.verify;
 
 import io.kubernetes.client.openapi.ApiException;
 import io.kubernetes.client.openapi.apis.AppsV1Api;
+import io.kubernetes.client.openapi.apis.BatchV1Api;
 import io.kubernetes.client.openapi.apis.CoreV1Api;
 import io.kubernetes.client.openapi.models.V1Pod;
 import io.kubernetes.client.openapi.models.V1Service;
@@ -41,6 +42,7 @@ public final class KubeJavaClientUtilTest {
 
   @Mock CoreV1Api mockCoreV1Api;
   @Mock AppsV1Api mockAppsV1Api;
+  @Mock BatchV1Api mockBatchV1Api;
 
   @Test
   public void createResources_whenInputServiceConfig_success() throws IOException, ApiException {
@@ -60,8 +62,7 @@ public final class KubeJavaClientUtilTest {
             + "    app: jupyter\n"
             + "  type: LoadBalancer\n";
 
-    KubeJavaClientUtil kubeJavaClientUtil = new KubeJavaClientUtil(mockCoreV1Api, mockAppsV1Api);
-    kubeJavaClientUtil.createResources(resourceConfig);
+    newK8sClient().createResources(resourceConfig);
 
     verify(mockCoreV1Api)
         .createNamespacedService(
@@ -93,8 +94,7 @@ public final class KubeJavaClientUtilTest {
             + "    gitRepo:\n"
             + "      repository: \"https://github.com/kubernetes-client/python.git\"\n";
 
-    KubeJavaClientUtil kubeJavaClientUtil = new KubeJavaClientUtil(mockCoreV1Api, mockAppsV1Api);
-    kubeJavaClientUtil.createResources(resourceConfig);
+    newK8sClient().createResources(resourceConfig);
 
     verify(mockCoreV1Api)
         .createNamespacedPod("default", (V1Pod) Yaml.load(resourceConfig), null, null, null);
@@ -123,7 +123,10 @@ public final class KubeJavaClientUtilTest {
         + "      - name: php-redis\n"
         + "        image: gcr.io/google_samples/gb-frontend:v3";
 
-    KubeJavaClientUtil kubeJavaClientUtil = new KubeJavaClientUtil(mockCoreV1Api, mockAppsV1Api);
-    assertThrows(AssertionError.class, () -> kubeJavaClientUtil.createResources(resourceConfig));
+    assertThrows(AssertionError.class, () -> newK8sClient().createResources(resourceConfig));
+  }
+
+  private KubeJavaClientUtil newK8sClient() {
+    return new KubeJavaClientUtil(mockCoreV1Api, mockAppsV1Api, mockBatchV1Api);
   }
 }

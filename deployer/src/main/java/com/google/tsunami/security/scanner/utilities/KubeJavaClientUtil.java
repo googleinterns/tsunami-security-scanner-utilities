@@ -21,8 +21,11 @@ import com.google.common.collect.ImmutableMap;
 import com.google.common.flogger.GoogleLogger;
 import io.kubernetes.client.openapi.ApiException;
 import io.kubernetes.client.openapi.apis.AppsV1Api;
+import io.kubernetes.client.openapi.apis.BatchV1Api;
 import io.kubernetes.client.openapi.apis.CoreV1Api;
+import io.kubernetes.client.openapi.models.V1ConfigMap;
 import io.kubernetes.client.openapi.models.V1Deployment;
+import io.kubernetes.client.openapi.models.V1Job;
 import io.kubernetes.client.openapi.models.V1PersistentVolumeClaim;
 import io.kubernetes.client.openapi.models.V1Pod;
 import io.kubernetes.client.openapi.models.V1Service;
@@ -39,26 +42,27 @@ public final class KubeJavaClientUtil {
 
   private final CoreV1Api coreV1Api;
   private final AppsV1Api appsV1Api;
+  private final BatchV1Api batchV1Api;
   // Use the map to relate a Class object to a Handler.
   private final ImmutableMap<Class, ResourceCreator> apiCallByClass;
 
   public KubeJavaClientUtil() {
-    this(new CoreV1Api(), new AppsV1Api());
+    this(new CoreV1Api(), new AppsV1Api(), new BatchV1Api());
   }
 
-  public KubeJavaClientUtil(CoreV1Api coreV1Api, AppsV1Api appsV1Api) {
+  public KubeJavaClientUtil(CoreV1Api coreV1Api, AppsV1Api appsV1Api, BatchV1Api batchV1Api) {
     this.coreV1Api = coreV1Api;
     this.appsV1Api = appsV1Api;
+    this.batchV1Api = batchV1Api;
     this.apiCallByClass =
-        ImmutableMap.of(
-            V1Deployment.class,
-            deployment -> createDeployment((V1Deployment) deployment),
-            V1PersistentVolumeClaim.class,
-            v1Pvc -> createPvc((V1PersistentVolumeClaim) v1Pvc),
-            V1Service.class,
-            v1Service -> createService((V1Service) v1Service),
-            V1Pod.class,
-            v1Pod -> createPod((V1Pod) v1Pod));
+        ImmutableMap.<Class, ResourceCreator>builder()
+            .put(V1Deployment.class, deployment -> createDeployment((V1Deployment) deployment))
+            .put(V1PersistentVolumeClaim.class, v1Pvc -> createPvc((V1PersistentVolumeClaim) v1Pvc))
+            .put(V1Service.class, v1Service -> createService((V1Service) v1Service))
+            .put(V1Pod.class, v1Pod -> createPod((V1Pod) v1Pod))
+            .put(V1Job.class, v1Job -> createJob((V1Job) v1Job))
+            .put(V1ConfigMap.class, v1ConfigMap -> createConfigMap((V1ConfigMap) v1ConfigMap))
+            .build();
   }
 
   @FunctionalInterface
@@ -80,6 +84,14 @@ public final class KubeJavaClientUtil {
 
   private void createPod(V1Pod v1Pod) throws ApiException {
     coreV1Api.createNamespacedPod("default", v1Pod, null, null, null);
+  }
+
+  public void createJob(V1Job v1Job) throws ApiException {
+    batchV1Api.createNamespacedJob("default", v1Job, null, null, null);
+  }
+
+  public void createConfigMap(V1ConfigMap v1ConfigMap) throws ApiException {
+    coreV1Api.createNamespacedConfigMap("default", v1ConfigMap, null, null, null);
   }
 
   public void createResources(String resourceConfig) throws ApiException, IOException {

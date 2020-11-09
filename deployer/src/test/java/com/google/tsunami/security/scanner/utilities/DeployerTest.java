@@ -24,6 +24,7 @@ import io.github.classgraph.ClassGraph;
 import io.github.classgraph.ScanResult;
 import io.kubernetes.client.openapi.ApiException;
 import io.kubernetes.client.openapi.apis.AppsV1Api;
+import io.kubernetes.client.openapi.apis.BatchV1Api;
 import io.kubernetes.client.openapi.apis.CoreV1Api;
 import io.kubernetes.client.openapi.models.V1Service;
 import io.kubernetes.client.util.Yaml;
@@ -47,10 +48,12 @@ public final class DeployerTest {
 
   @Mock CoreV1Api mockCoreV1Api;
   @Mock AppsV1Api mockAppsV1Api;
+  @Mock BatchV1Api mockBatchV1Api;
 
   @Before
   public void setUp() {
-    this.deployer = new Deployer(new KubeJavaClientUtil(mockCoreV1Api, mockAppsV1Api), scanResult);
+    this.deployer = new Deployer(
+        new KubeJavaClientUtil(mockCoreV1Api, mockAppsV1Api, mockBatchV1Api), scanResult);
   }
 
   @Test
